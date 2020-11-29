@@ -24,6 +24,7 @@ import com.jagrosh.jmusicbot.BlindTest;
 import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.audio.QueuedTrack;
+import com.jagrosh.jmusicbot.commands.DJCommand;
 import com.jagrosh.jmusicbot.commands.MusicCommand;
 import com.jagrosh.jmusicbot.listener.PropositionListener;
 import com.sapher.youtubedl.YoutubeDL;
@@ -56,22 +57,15 @@ public class BTNextCmd extends MusicCommand {
         this.guildOnly = true;
     }
 
-    //    @Override
-    //    protected void execute(CommandEvent commandEvent) {
-    //        if (!blindTest.pickRandomNextSong()) {
-    //            commandEvent.reply("Toutes les chansons ont été jouées :'(");
-    //            return;
-    //        }
-    //        bot.getPlayerManager().loadItem(blindTest.getCurrentSongEntry().getUrl(), new BTNextCmd.ResultHandler(commandEvent));
-    //    }
-
     @Override
     public void doCommand(CommandEvent commandEvent) {
-        if (!blindTest.pickRandomNextSong()) {
-            commandEvent.reply("Toutes les chansons ont été jouées :'(");
-            return;
+        if (DJCommand.checkDJPermission(commandEvent)) {
+            if (!blindTest.pickRandomNextSong()) {
+                commandEvent.reply("Toutes les chansons ont été jouées :'(");
+                return;
+            }
+            bot.getPlayerManager().loadItem(blindTest.getCurrentSongEntry().getUrl(), new BTNextCmd.ResultHandler(commandEvent));
         }
-        bot.getPlayerManager().loadItem(blindTest.getCurrentSongEntry().getUrl(), new BTNextCmd.ResultHandler(commandEvent));
     }
 
     private class ResultHandler implements AudioLoadResultHandler {
@@ -88,7 +82,7 @@ public class BTNextCmd extends MusicCommand {
             AudioHandler handler = (AudioHandler) event.getGuild().getAudioManager().getSendingHandler();
             handler.setOnTrackEndLambda(() -> event.reply(blindTest.onTrackEnd()));
             propositionListener.setOnPropositionLambda((author, prop) -> {
-                if (author.equalsIgnoreCase(songEntry.getOwner())) return null;
+//                if (author.equalsIgnoreCase(songEntry.getOwner())) return null;
                 String reply = blindTest.onProposition(author, prop);
                 if (reply != null) {
                     event.reply(reply);
@@ -96,7 +90,7 @@ public class BTNextCmd extends MusicCommand {
                 return null;
             });
             int pos = handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor())) + 1;
-            event.reply("\uD83D\uDEA8 Chanson proposée par " + songEntry.getOwner() + " qui ne pourra pas jouer durant ce tour \uD83D\uDEA8");
+            event.reply("\uD83D\uDEA8 Chanson proposée par **" + songEntry.getOwner() + "** qui ne pourra pas jouer durant ce tour \uD83D\uDEA8");
         }
 
         @Override

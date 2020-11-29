@@ -30,6 +30,12 @@ public class BlindTest {
         return entryList;
     }
 
+    public void clearCurrentSong() {
+        trackFound = null;
+        artistFound = null;
+        currentSongEntry = null;
+    }
+
     public String onProposition(String author, String proposition) {
         if (currentSongEntry == null) return null;
         if (artistFound != null && trackFound != null) return null;
@@ -80,10 +86,9 @@ public class BlindTest {
         entryList = entryList.stream().filter(e -> !e.done).collect(Collectors.toList());
         if (entryList.isEmpty()) return false;
         Collections.shuffle(entryList);
+        clearCurrentSong();
         currentSongEntry = entryList.get(0);
         currentSongEntry.done = true;
-        trackFound = null;
-        artistFound = null;
         return true;
     }
 
@@ -93,7 +98,7 @@ public class BlindTest {
         int total = 0;
 
         for (Map.Entry<String, LinkedHashSet<SongEntry>> e : entries.entrySet()) {
-            pool += e.getKey() + " : " + e.getValue().size() + "\n";
+            pool += e.getKey() + " : " + e.getValue().size() + "/" + songsPerPlayer + "\n";
             total += e.getValue().size();
         }
         pool += "**TOTAL** : " + total;
@@ -151,7 +156,7 @@ public class BlindTest {
             addScore(currentSongEntry.getOwner(), NOTFOUND_SCORE);
             return reply + " et personne ne l'a trouvée .. (" + NOTFOUND_SCORE + " pour " + currentSongEntry.getOwner() + ")";
         }
-        currentSongEntry = null;
+        clearCurrentSong();
         return reply;
     }
 
@@ -165,6 +170,10 @@ public class BlindTest {
             SongEntry e = it.next();
             list += i + " : <" + e.url + "> [" + e.artist + "-" + e.title + "]\n";
             i++;
+        }
+        if (entrySet.size() < songsPerPlayer) {
+            int diff = songsPerPlayer - entrySet.size();
+            list += "Il te manque encore " + diff + "  chanson" + (diff > 1 ? "s" : "");
         }
         return list;
     }
@@ -250,4 +259,7 @@ public class BlindTest {
         }
     }
 
+    public Integer getSongsPerPlayer() {
+        return songsPerPlayer;
+    }
 }
