@@ -103,6 +103,7 @@ public class JMusicBot {
                 .setLinkedCacheSize(200)
                 .setGuildSettingsManager(settings)
                 .addCommands(
+                        new BTPoolCmd(bot, blindTest),
                         new BTDMAddCmd(bot, blindTest),
                         new BTDMListCmd(bot, blindTest),
                         new BTDMRemoveCmd(bot, blindTest),

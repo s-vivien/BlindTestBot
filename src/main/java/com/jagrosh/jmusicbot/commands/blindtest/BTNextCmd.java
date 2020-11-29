@@ -96,7 +96,7 @@ public class BTNextCmd extends MusicCommand {
                 return null;
             });
             int pos = handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor())) + 1;
-            event.reply("Chanson proposée par " + songEntry.getOwner() + " qui ne pourra pas jouer durant ce tour");
+            event.reply("\uD83D\uDEA8 Chanson proposée par " + songEntry.getOwner() + " qui ne pourra pas jouer durant ce tour \uD83D\uDEA8");
         }
 
         @Override

@@ -9,6 +9,7 @@ public class BlindTest {
 
     static final int SINGLE_SCORE = 1;
     static final int COMBO_SCORE = 3;
+    static final int NOTFOUND_SCORE = -1;
     static final int MAX_DIST = 2;
 
     Map<String, LinkedHashSet<SongEntry>> entries = new HashMap<>();
@@ -41,15 +42,15 @@ public class BlindTest {
                 artistFound = author;
                 trackFound = author;
                 addScore(author, COMBO_SCORE);
-                return author + " a trouvé l'artiste et le titre ! (+3 points)";
+                return author + " a trouvé l'artiste et le titre ! (+" + COMBO_SCORE + ")";
             } else if (artistFound == null) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);
-                return author + " a trouvé l'artiste ! (+1 point)";
+                return author + " a trouvé l'artiste ! (+" + SINGLE_SCORE + ")";
             } else if (trackFound == null) {
                 trackFound = author;
                 addScore(author, SINGLE_SCORE);
-                return author + " a trouvé le titre ! (+1 point)";
+                return author + " a trouvé le titre ! (+" + SINGLE_SCORE + ")";
             }
         }
 
@@ -58,7 +59,7 @@ public class BlindTest {
             if (artistAlone <= MAX_DIST) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);
-                return author + " a trouvé l'artiste ! (+1 point)";
+                return author + " a trouvé l'artiste ! (+" + SINGLE_SCORE + ")";
             }
         }
 
@@ -67,7 +68,7 @@ public class BlindTest {
             if (trackAlone <= MAX_DIST) {
                 trackFound = author;
                 addScore(author, SINGLE_SCORE);
-                return author + " a trouvé le titre ! (+1 point)";
+                return author + " a trouvé le titre ! (+" + SINGLE_SCORE + ")";
             }
         }
 
@@ -87,12 +88,15 @@ public class BlindTest {
     }
 
     public String getSongPool() {
-        String pool = "";
+        String pool = "\uD83D\uDCBF Pool de chansons\n";
 
-        //Map<String, LinkedHashSet<SongEntry>> entries = new HashMap<>();
+        int total = 0;
+
         for (Map.Entry<String, LinkedHashSet<SongEntry>> e : entries.entrySet()) {
-            pool += e.getKey() + " : " + e.getValue().size();
+            pool += e.getKey() + " : " + e.getValue().size() + "\n";
+            total += e.getValue().size();
         }
+        pool += "**TOTAL** : " + total;
 
         return pool;
     }
@@ -105,21 +109,21 @@ public class BlindTest {
 
         TreeMap<Integer, List<String>> scoreMap = new TreeMap<>(Collections.reverseOrder());
         for (Map.Entry<String, Integer> e : scores.entrySet()) {
-            if (scoreMap.get(e.getValue()) == null) scoreMap.put(e.getValue(), new ArrayList<>());
+            scoreMap.computeIfAbsent(e.getValue(), k -> new ArrayList<>());
             scoreMap.get(e.getValue()).add(e.getKey());
         }
 
-        String scoreboard = "Scores (" + doneEntrySize + " chansons jouées sur " + totalEntrySize + ") :";
+        String scoreboard = "⏫ Scores (" + doneEntrySize + " chanson" + (doneEntrySize > 1 ? "s" : "") + " jouée" + (doneEntrySize > 1 ? "s" : "") + " sur " + totalEntrySize + ") :";
         for (Map.Entry<Integer, List<String>> e : scoreMap.entrySet()) {
-            scoreboard += "\n" + e.getKey() + " point" + (e.getKey() > 1 ? "s" : "") + " : " + e.getValue().stream().collect(Collectors.joining(", "));
+            scoreboard += "\n" + e.getKey() + " point" + ((e.getKey() > 1 || e.getKey() < -1) ? "s" : "") + " : " + String.join(", ", e.getValue());
         }
 
         return scoreboard;
     }
 
     public int addSongRequest(String author, String url, String artist, String title) {
-        if (entries.get(author) == null) entries.put(author, new LinkedHashSet<>());
-        if (scores.get(author) == null) scores.put(author, 0);
+        entries.computeIfAbsent(author, k -> new LinkedHashSet<>());
+        scores.putIfAbsent(author, 0);
         if (entries.get(author).size() >= songsPerPlayer) return 2;
         SongEntry se = new SongEntry(url, author, artist.toLowerCase(), cleanTitle(title.toLowerCase()));
         return entries.get(author).add(se) ? 0 : 1;
@@ -142,9 +146,10 @@ public class BlindTest {
     }
 
     public String onTrackEnd() {
-        String reply = "La chanson était [ " + currentSongEntry.artist + " - " + currentSongEntry.title + " ]";
+        String reply = "⏳ La chanson était **[ " + currentSongEntry.artist + " - " + currentSongEntry.title + " ]**";
         if (trackFound == null && artistFound == null) {
-            return reply + " et personne ne l'a trouvée ..";
+            addScore(currentSongEntry.getOwner(), NOTFOUND_SCORE);
+            return reply + " et personne ne l'a trouvée .. (" + NOTFOUND_SCORE + " pour " + currentSongEntry.getOwner() + ")";
         }
         currentSongEntry = null;
         return reply;
