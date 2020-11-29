@@ -25,6 +25,7 @@ import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.audio.QueuedTrack;
 import com.jagrosh.jmusicbot.commands.MusicCommand;
+import com.jagrosh.jmusicbot.listener.PropositionListener;
 import com.sapher.youtubedl.YoutubeDL;
 import com.sapher.youtubedl.YoutubeDLRequest;
 import com.sapher.youtubedl.YoutubeDLResponse;
@@ -40,9 +41,11 @@ public class BTNextCmd extends MusicCommand {
 
     private BlindTest blindTest;
     private Bot bot;
+    private PropositionListener propositionListener;
 
-    public BTNextCmd(Bot bot, BlindTest blindTest) {
+    public BTNextCmd(Bot bot, BlindTest blindTest, PropositionListener propositionListener) {
         super(bot);
+        this.propositionListener = propositionListener;
         this.blindTest = blindTest;
         this.bot = bot;
         this.name = "next";
@@ -53,14 +56,14 @@ public class BTNextCmd extends MusicCommand {
         this.guildOnly = true;
     }
 
-//    @Override
-//    protected void execute(CommandEvent commandEvent) {
-//        if (!blindTest.pickRandomNextSong()) {
-//            commandEvent.reply("Toutes les chansons ont été jouées :'(");
-//            return;
-//        }
-//        bot.getPlayerManager().loadItem(blindTest.getCurrentSongEntry().getUrl(), new BTNextCmd.ResultHandler(commandEvent));
-//    }
+    //    @Override
+    //    protected void execute(CommandEvent commandEvent) {
+    //        if (!blindTest.pickRandomNextSong()) {
+    //            commandEvent.reply("Toutes les chansons ont été jouées :'(");
+    //            return;
+    //        }
+    //        bot.getPlayerManager().loadItem(blindTest.getCurrentSongEntry().getUrl(), new BTNextCmd.ResultHandler(commandEvent));
+    //    }
 
     @Override
     public void doCommand(CommandEvent commandEvent) {
@@ -83,23 +86,32 @@ public class BTNextCmd extends MusicCommand {
         public void trackLoaded(AudioTrack audioTrack) {
             BlindTest.SongEntry songEntry = blindTest.getCurrentSongEntry();
             AudioHandler handler = (AudioHandler) event.getGuild().getAudioManager().getSendingHandler();
+            handler.setOnTrackEndLambda(() -> event.reply(blindTest.onTrackEnd()));
+            propositionListener.setOnPropositionLambda((author, prop) -> {
+                if (author.equalsIgnoreCase(songEntry.getOwner())) return null;
+                String reply = blindTest.onProposition(author, prop);
+                if (reply != null) {
+                    event.reply(reply);
+                }
+                return null;
+            });
             int pos = handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor())) + 1;
             event.reply("Chanson proposée par " + songEntry.getOwner() + " qui ne pourra pas jouer durant ce tour");
         }
 
         @Override
         public void playlistLoaded(AudioPlaylist audioPlaylist) {
-            event.reply("Error");
+            event.reply("Error 1");
         }
 
         @Override
         public void noMatches() {
-            event.reply("Error");
+            event.reply("Error 2");
         }
 
         @Override
         public void loadFailed(FriendlyException e) {
-            event.reply("Error");
+            event.reply("Error 3");
         }
     }
 

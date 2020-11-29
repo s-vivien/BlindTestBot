@@ -3,37 +3,125 @@ package com.jagrosh.jmusicbot;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class BlindTest {
+
+    static final int SINGLE_SCORE = 1;
+    static final int COMBO_SCORE = 3;
+    static final int MAX_DIST = 2;
 
     Map<String, LinkedHashSet<SongEntry>> entries = new HashMap<>();
     Map<String, Integer> scores = new HashMap<>();
     Integer songsPerPlayer;
 
+    // Current song
     SongEntry currentSongEntry = null;
+    String trackFound, artistFound;
 
     public BlindTest(BotConfig cfg) {
         songsPerPlayer = cfg.getSongsPerPlayer();
     }
 
-    public boolean pickRandomNextSong() {
+    private List<SongEntry> getFlatEntries() {
         List<SongEntry> entryList = new ArrayList<>();
-        entries.entrySet().forEach(e -> {
-            for (SongEntry se : e.getValue()) {
-                if (!se.done) entryList.add(se);
+        entries.entrySet().forEach(e -> entryList.addAll(e.getValue()));
+        return entryList;
+    }
+
+    public String onProposition(String author, String proposition) {
+        if (currentSongEntry == null) return null;
+        if (artistFound != null && trackFound != null) return null;
+
+        proposition = proposition.toLowerCase();
+
+        int combo = Math.min(calculate(proposition, currentSongEntry.artist + " " + currentSongEntry.title), calculate(proposition, currentSongEntry.title + " " + currentSongEntry.artist));
+        if (combo <= MAX_DIST) {
+            if (artistFound == null && trackFound == null) {
+                artistFound = author;
+                trackFound = author;
+                addScore(author, COMBO_SCORE);
+                return author + " a trouvé l'artiste et le titre ! (+3 points)";
+            } else if (artistFound == null) {
+                artistFound = author;
+                addScore(author, SINGLE_SCORE);
+                return author + " a trouvé l'artiste ! (+1 point)";
+            } else if (trackFound == null) {
+                trackFound = author;
+                addScore(author, SINGLE_SCORE);
+                return author + " a trouvé le titre ! (+1 point)";
             }
-        });
+        }
+
+        if (artistFound == null) {
+            int artistAlone = calculate(proposition, currentSongEntry.artist);
+            if (artistAlone <= MAX_DIST) {
+                artistFound = author;
+                addScore(author, SINGLE_SCORE);
+                return author + " a trouvé l'artiste ! (+1 point)";
+            }
+        }
+
+        if (trackFound == null) {
+            int trackAlone = calculate(proposition, currentSongEntry.title);
+            if (trackAlone <= MAX_DIST) {
+                trackFound = author;
+                addScore(author, SINGLE_SCORE);
+                return author + " a trouvé le titre ! (+1 point)";
+            }
+        }
+
+        return null;
+    }
+
+    public boolean pickRandomNextSong() {
+        List<SongEntry> entryList = getFlatEntries();
+        entryList = entryList.stream().filter(e -> !e.done).collect(Collectors.toList());
         if (entryList.isEmpty()) return false;
         Collections.shuffle(entryList);
         currentSongEntry = entryList.get(0);
         currentSongEntry.done = true;
+        trackFound = null;
+        artistFound = null;
         return true;
+    }
+
+    public String getSongPool() {
+        String pool = "";
+
+        //Map<String, LinkedHashSet<SongEntry>> entries = new HashMap<>();
+        for (Map.Entry<String, LinkedHashSet<SongEntry>> e : entries.entrySet()) {
+            pool += e.getKey() + " : " + e.getValue().size();
+        }
+
+        return pool;
+    }
+
+    public String getScoreBoard() {
+        List<SongEntry> entryList = getFlatEntries();
+        int totalEntrySize = entryList.size();
+        entryList = entryList.stream().filter(e -> e.done).collect(Collectors.toList());
+        int doneEntrySize = entryList.size();
+
+        TreeMap<Integer, List<String>> scoreMap = new TreeMap<>(Collections.reverseOrder());
+        for (Map.Entry<String, Integer> e : scores.entrySet()) {
+            if (scoreMap.get(e.getValue()) == null) scoreMap.put(e.getValue(), new ArrayList<>());
+            scoreMap.get(e.getValue()).add(e.getKey());
+        }
+
+        String scoreboard = "Scores (" + doneEntrySize + " chansons jouées sur " + totalEntrySize + ") :";
+        for (Map.Entry<Integer, List<String>> e : scoreMap.entrySet()) {
+            scoreboard += "\n" + e.getKey() + " point" + (e.getKey() > 1 ? "s" : "") + " : " + e.getValue().stream().collect(Collectors.joining(", "));
+        }
+
+        return scoreboard;
     }
 
     public int addSongRequest(String author, String url, String artist, String title) {
         if (entries.get(author) == null) entries.put(author, new LinkedHashSet<>());
+        if (scores.get(author) == null) scores.put(author, 0);
         if (entries.get(author).size() >= songsPerPlayer) return 2;
-        SongEntry se = new SongEntry(url, author, artist, cleanTitle(title));
+        SongEntry se = new SongEntry(url, author, artist.toLowerCase(), cleanTitle(title.toLowerCase()));
         return entries.get(author).add(se) ? 0 : 1;
     }
 
@@ -51,6 +139,15 @@ public class BlindTest {
             i++;
         }
         return 1;
+    }
+
+    public String onTrackEnd() {
+        String reply = "La chanson était [ " + currentSongEntry.artist + " - " + currentSongEntry.title + " ]";
+        if (trackFound == null && artistFound == null) {
+            return reply + " et personne ne l'a trouvée ..";
+        }
+        currentSongEntry = null;
+        return reply;
     }
 
     public String getSongList(String nick) {
@@ -83,6 +180,36 @@ public class BlindTest {
 
     public SongEntry getCurrentSongEntry() {
         return currentSongEntry;
+    }
+
+    private int calculate(String x, String y) {
+        int[][] dp = new int[x.length() + 1][y.length() + 1];
+
+        for (int i = 0; i <= x.length(); i++) {
+            for (int j = 0; j <= y.length(); j++) {
+                if (i == 0) {
+                    dp[i][j] = j;
+                } else if (j == 0) {
+                    dp[i][j] = i;
+                } else {
+                    dp[i][j] = min(dp[i - 1][j - 1]
+                                   + costOfSubstitution(x.charAt(i - 1), y.charAt(j - 1)),
+                            dp[i - 1][j] + 1,
+                            dp[i][j - 1] + 1);
+                }
+            }
+        }
+
+        return dp[x.length()][y.length()];
+    }
+
+    public static int costOfSubstitution(char a, char b) {
+        return a == b ? 0 : 1;
+    }
+
+    public static int min(int... numbers) {
+        return Arrays.stream(numbers)
+                .min().orElse(Integer.MAX_VALUE);
     }
 
     public static class SongEntry {

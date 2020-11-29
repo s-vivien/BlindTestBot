@@ -107,6 +107,7 @@ public class BTDMAddCmd extends Command {
             String url = event.getMessage().getContentRaw().substring("!add ".length());
 
             TrackInfo info = extractArtistAndTrack(url);
+//            TrackInfo info = new TrackInfo("fa","ke");
             if (info == null) event.reply("Erreur durant l'extraction des informations de la chanson ... Déso");
             else {
                 int addResult = blindTest.addSongRequest(author, url, info.artist, info.track);

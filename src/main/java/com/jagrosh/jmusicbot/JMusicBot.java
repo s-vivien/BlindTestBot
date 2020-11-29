@@ -18,12 +18,10 @@ package com.jagrosh.jmusicbot;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import com.jagrosh.jdautilities.examples.command.*;
-import com.jagrosh.jmusicbot.commands.blindtest.BTDMAddCmd;
-import com.jagrosh.jmusicbot.commands.blindtest.BTDMListCmd;
-import com.jagrosh.jmusicbot.commands.blindtest.BTDMRemoveCmd;
-import com.jagrosh.jmusicbot.commands.blindtest.BTNextCmd;
+import com.jagrosh.jmusicbot.commands.blindtest.*;
 import com.jagrosh.jmusicbot.commands.dj.PauseCmd;
 import com.jagrosh.jmusicbot.commands.dj.StopCmd;
+import com.jagrosh.jmusicbot.commands.dj.VolumeCmd;
 import com.jagrosh.jmusicbot.commands.music.PlayCmd;
 import com.jagrosh.jmusicbot.commands.owner.*;
 import com.jagrosh.jmusicbot.entities.Prompt;
@@ -84,15 +82,15 @@ public class JMusicBot {
         SettingsManager settings = new SettingsManager();
         Bot bot = new Bot(waiter, config, settings);
 
-        AboutCommand aboutCommand = new AboutCommand(Color.BLUE.brighter(),
-                "a music bot that is [easy to host yourself!](https://github.com/jagrosh/MusicBot) (v" + version + ")",
-                new String[]{"High-quality music playback", "FairQueue™ Technology", "Easy to host yourself"},
-                RECOMMENDED_PERMS);
-        aboutCommand.setIsAuthor(false);
-        aboutCommand.setReplacementCharacter("\uD83C\uDFB6"); // 🎶
+//        AboutCommand aboutCommand = new AboutCommand(Color.BLUE.brighter(),
+//                "a music bot that is [easy to host yourself!](https://github.com/jagrosh/MusicBot) (v" + version + ")",
+//                new String[]{"High-quality music playback", "FairQueue™ Technology", "Easy to host yourself"},
+//                RECOMMENDED_PERMS);
+//        aboutCommand.setIsAuthor(false);
+//        aboutCommand.setReplacementCharacter("\uD83C\uDFB6"); // 🎶
 
         BlindTest blindTest = new BlindTest(config);
-        PropositionListener propositionListener = new PropositionListener(blindTest);
+        PropositionListener propositionListener = new PropositionListener();
 
         // set up the command client
         CommandClientBuilder cb = new CommandClientBuilder()
@@ -104,11 +102,12 @@ public class JMusicBot {
                 .setHelpWord(config.getHelp())
                 .setLinkedCacheSize(200)
                 .setGuildSettingsManager(settings)
-                .addCommands(aboutCommand,
+                .addCommands(
                         new BTDMAddCmd(bot, blindTest),
                         new BTDMListCmd(bot, blindTest),
                         new BTDMRemoveCmd(bot, blindTest),
-                        new BTNextCmd(bot, blindTest),
+                        new BTScoreboardCmd(bot, blindTest),
+                        new BTNextCmd(bot, blindTest, propositionListener),
                         //                        new PingCommand(),
                         //                        new SettingsCmd(bot),
                         //
@@ -130,8 +129,8 @@ public class JMusicBot {
                         //                        new PlaynextCmd(bot),
                         //                        new RepeatCmd(bot),
                         //                        new SkiptoCmd(bot),
-                        new StopCmd(bot)
-                        //                        new VolumeCmd(bot),
+                        new StopCmd(bot),
+                        new VolumeCmd(bot)
                         //
                         //                        new PrefixCmd(bot),
                         //                        new SetdjCmd(bot),

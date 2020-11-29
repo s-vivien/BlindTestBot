@@ -1,20 +1,21 @@
 package com.jagrosh.jmusicbot.listener;
 
 import com.jagrosh.jdautilities.command.CommandListener;
-import com.jagrosh.jmusicbot.BlindTest;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+
+import java.util.function.BiFunction;
 
 public class PropositionListener implements CommandListener {
 
-    private BlindTest blindTest;
+    private BiFunction<String, String, Void> onPropositionLambda;
 
-    public PropositionListener(BlindTest blindTest) {
-        this.blindTest = blindTest;
+    public void setOnPropositionLambda(BiFunction<String, String, Void> onPropositionLambda) {
+        this.onPropositionLambda = onPropositionLambda;
     }
 
     @Override
     public void onNonCommandMessage(MessageReceivedEvent event) {
-//        if ()
+        onPropositionLambda.apply(event.getAuthor().getName(), event.getMessage().getContentRaw());
     }
 
 }
