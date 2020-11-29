@@ -43,6 +43,7 @@ public class BotConfig
             successEmoji, warningEmoji, errorEmoji, loadingEmoji, searchingEmoji;
     private boolean stayInChannel, songInGame, npImages, updatealerts, useEval, dbots;
     private long owner, maxSeconds;
+    private int songsPerPlayer;
     private OnlineStatus status;
     private Activity game;
     private Config aliases;
@@ -63,17 +64,17 @@ public class BotConfig
         try 
         {
             // get the path to the config, default config.txt
-            path = OtherUtil.getPath(System.getProperty("config.file", System.getProperty("config", "config.txt")));
+            path = OtherUtil.getPath(System.getProperty("config.txt", System.getProperty("config", "config.txt")));
             if(path.toFile().exists())
             {
-                if(System.getProperty("config.file") == null)
-                    System.setProperty("config.file", System.getProperty("config", "config.txt"));
+                if(System.getProperty("config.txt") == null)
+                    System.setProperty("config.txt", System.getProperty("config", "config.txt"));
                 ConfigFactory.invalidateCaches();
             }
             
             // load in the config file, plus the default values
-            //Config config = ConfigFactory.parseFile(path.toFile()).withFallback(ConfigFactory.load());
-            Config config = ConfigFactory.load();
+            Config config = ConfigFactory.parseFile(path.toFile()).withFallback(ConfigFactory.load());
+//            Config config = ConfigFactory.load();
             
             // set values
             token = config.getString("token");
@@ -97,6 +98,7 @@ public class BotConfig
             playlistsFolder = config.getString("playlistsfolder");
             aliases = config.getConfig("aliases");
             dbots = owner == 113156185389092864L;
+            songsPerPlayer = config.getInt("songsPerPlayer");
             
             // we may need to write a new config file
             boolean write = false;
@@ -298,7 +300,11 @@ public class BotConfig
     {
         return FormatUtil.formatTime(maxSeconds * 1000);
     }
-    
+
+    public int getSongsPerPlayer() {
+        return songsPerPlayer;
+    }
+
     public boolean isTooLong(AudioTrack track)
     {
         if(maxSeconds<=0)

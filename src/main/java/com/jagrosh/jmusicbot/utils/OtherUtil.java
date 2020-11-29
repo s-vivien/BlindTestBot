@@ -160,7 +160,7 @@ public class OtherUtil
         
         if(latestVersion!=null && !latestVersion.equals(version))
         {
-            prompt.alert(Prompt.Level.WARNING, "Version", String.format(NEW_VERSION_AVAILABLE, version, latestVersion));
+//            prompt.alert(Prompt.Level.WARNING, "Version", String.format(NEW_VERSION_AVAILABLE, version, latestVersion));
         }
         
         // Return the current version
