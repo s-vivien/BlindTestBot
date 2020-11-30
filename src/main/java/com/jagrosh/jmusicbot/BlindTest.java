@@ -72,6 +72,7 @@ public class BlindTest {
 
         if (artistFound == null) {
             int artistAlone = calculate(proposition, currentSongEntry.artist);
+            System.err.println("artistAlone " + artistAlone);
             if (artistAlone <= MAX_DIST) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);
@@ -153,6 +154,40 @@ public class BlindTest {
             it.next();
             if (i == index) {
                 it.remove();
+                return 0;
+            }
+            i++;
+        }
+        return 1;
+    }
+
+    public int updateArtist(String author, Integer index, String artist) {
+        LinkedHashSet<SongEntry> entrySet = entries.get(author);
+        if (entrySet == null || entrySet.isEmpty() || entrySet.size() < index) return 1;
+        Iterator<SongEntry> it = entrySet.iterator();
+        int i = 1;
+        while (it.hasNext()) {
+            SongEntry e = it.next();
+            if (i == index) {
+                e.artist = cleanLight(artist.toLowerCase());
+                e.recomputeOriginalTitle();
+                return 0;
+            }
+            i++;
+        }
+        return 1;
+    }
+
+    public int updateTitle(String author, Integer index, String title) {
+        LinkedHashSet<SongEntry> entrySet = entries.get(author);
+        if (entrySet == null || entrySet.isEmpty() || entrySet.size() < index) return 1;
+        Iterator<SongEntry> it = entrySet.iterator();
+        int i = 1;
+        while (it.hasNext()) {
+            SongEntry e = it.next();
+            if (i == index) {
+                e.title = cleanTitle(title.toLowerCase());
+                e.recomputeOriginalTitle();
                 return 0;
             }
             i++;
@@ -351,6 +386,10 @@ public class BlindTest {
 
         public String getOwner() {
             return owner;
+        }
+
+        public void recomputeOriginalTitle() {
+            completeOriginalTitle = artist + " - " + title;
         }
     }
 }

@@ -101,6 +101,8 @@ public class JMusicBot {
                         new BTPublicScoreboardCmd(blindTest),
                         new BTDMAddCmd(bot, blindTest),
                         new BTDMListCmd(bot, blindTest),
+                        new BTDMSetTitleCmd(bot, blindTest),
+                        new BTDMSetArtistCmd(bot, blindTest),
                         new BTDMRemoveCmd(bot, blindTest),
                         new BTNextCmd(bot, blindTest, propositionListener),
                         //                        new PingCommand(),

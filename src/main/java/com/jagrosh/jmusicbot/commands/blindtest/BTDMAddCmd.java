@@ -102,13 +102,11 @@ public class BTDMAddCmd extends BTDMCommand {
             String author = event.getMessage().getAuthor().getName();
             String url = event.getMessage().getContentRaw().substring("!add ".length());
             TrackInfo info = extractArtistAndTrack(url);
-            if (info == null) event.reply("Erreur durant l'extraction des informations de la chanson ... Déso");
-            else {
-                int addResult = blindTest.addSongRequest(author, url, info.artist, info.track);
-                if (addResult == 1) event.reply("Cette chanson avait déjà été ajoutée");
-                else if (addResult == 2) event.reply("Il n'y a plus de place, nombre maximum de chansons atteint");
-                else event.reply("Chanson ajoutée, les joueurs devront taper les valeurs entre crochets pour marquer les points. Pensez à check qu'elles sont correctes.\n" + blindTest.getSongList(author));
-            }
+            int addResult = blindTest.addSongRequest(author, url, info != null ? info.artist : "", info != null ? info.track : "");
+            if (addResult == 1) event.reply("Cette chanson avait déjà été ajoutée");
+            else if (addResult == 2) event.reply("Il n'y a plus de place, nombre maximum de chansons atteint");
+            else event.reply("Chanson ajoutée" + (info == null ? " (:rotating_light: probable erreur dans le titre/artiste)" : "") +
+                             ", les joueurs devront taper les valeurs entre crochets pour marquer les points. Pensez à vérifier qu'elles sont correctes.\n" + blindTest.getSongList(author));
         }
 
         @Override

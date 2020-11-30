@@ -37,9 +37,9 @@ public class BTPublicRulesCmd extends BTPublicCommand {
     protected void execute(CommandEvent commandEvent) {
         String rules = ":bulb: **Propositions de chansons :** :bulb:\n" +
                        "* Le pool de chansons est collaboratif, chaque participant propose un nombre égal de chansons\n" +
-                       "* Pour proposer une chanson, envoyer un DM au bot au format suivant : `!add <YT url>`. Quelques secondes plus tard, le bot vous répondra en vous indiquant le succès de l'opération, et la liste des chansons ajoutées jusqu'à maintenant le cas échéant\n" +
-                       "* Les vidéos trop obscures/inconnues sur lesquelles il est impossible d'extraire les métadonnées (artiste, titre) provoqueront une erreur. Typiquement, il faut que les informations **Musique utilisée dans cette vidéo** soient remplies sous la vidéo\n" +
+                       "* Pour proposer une chanson, envoyer un DM au bot au format suivant : `!add <YT url>`. Quelques secondes plus tard, le bot vous répondra en vous indiquant le succès/échec de l'opération, et la liste des chansons ajoutées jusqu'à maintenant le cas échéant\n" +
                        "* La liste des chansons retournées par le bot est suffixée par ce que les gens devront taper pour valider leur réponse, veillez à ce que ces données soient correctes\n" +
+                       "* Si ces informations sont incorrectes ou incomplètes, vous pouvez les mettre à jour manuellement à l'aide des commandes `!setartist <id> <artist>` et `!settitle <id> <title>`\n" +
                        "\n" +
                        ":bulb: **Règles du blind-test :** :bulb:\n" +
                        "* Quand la chanson démarre, tout le monde tape ses propositions directement dans le chan général\n" +
