@@ -15,10 +15,11 @@
  */
 package com.jagrosh.jmusicbot.entities;
 
-import java.util.Scanner;
-import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.util.Scanner;
 
 /**
  *

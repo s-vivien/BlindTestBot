@@ -15,30 +15,27 @@
  */
 package com.jagrosh.jmusicbot.commands.blindtest;
 
-import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.BlindTest;
-import com.jagrosh.jmusicbot.Bot;
+import com.jagrosh.jmusicbot.commands.BTDJCommand;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTPoolCmd extends Command {
+public class BTRestoreCmd extends BTDJCommand {
 
     private BlindTest blindTest;
-    private Bot bot;
 
-    public BTPoolCmd(Bot bot, BlindTest blindTest) {
+    public BTRestoreCmd(BlindTest blindTest) {
         this.blindTest = blindTest;
-        this.bot = bot;
-        this.name = "pool";
-        this.help = "Prints the song pool";
-        this.aliases = bot.getConfig().getAliases(this.name);
+        this.name = "restore";
+        this.arguments = "<Backup name>";
+        this.help = "restores the state of the game from a named backup";
         this.guildOnly = true;
     }
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        commandEvent.reply(blindTest.getSongPool());
+        commandEvent.reply(blindTest.restoreState(commandEvent.getArgs()));
     }
 }

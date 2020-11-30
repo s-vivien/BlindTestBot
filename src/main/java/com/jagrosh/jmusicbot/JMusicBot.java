@@ -17,29 +17,26 @@ package com.jagrosh.jmusicbot;
 
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
-import com.jagrosh.jdautilities.examples.command.*;
 import com.jagrosh.jmusicbot.commands.blindtest.*;
-import com.jagrosh.jmusicbot.commands.dj.PauseCmd;
-import com.jagrosh.jmusicbot.commands.dj.StopCmd;
-import com.jagrosh.jmusicbot.commands.dj.VolumeCmd;
-import com.jagrosh.jmusicbot.commands.music.PlayCmd;
-import com.jagrosh.jmusicbot.commands.owner.*;
+import com.jagrosh.jmusicbot.commands.dj.*;
+import com.jagrosh.jmusicbot.commands.owner.EvalCmd;
 import com.jagrosh.jmusicbot.entities.Prompt;
 import com.jagrosh.jmusicbot.gui.GUI;
 import com.jagrosh.jmusicbot.listener.PropositionListener;
 import com.jagrosh.jmusicbot.settings.SettingsManager;
 import com.jagrosh.jmusicbot.utils.OtherUtil;
-
-import java.awt.Color;
-import java.util.Arrays;
-import javax.security.auth.login.LoginException;
-
-import net.dv8tion.jda.api.*;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.security.auth.login.LoginException;
+import java.util.Arrays;
 
 /**
  * @author John Grosh (jagrosh)
@@ -82,13 +79,6 @@ public class JMusicBot {
         SettingsManager settings = new SettingsManager();
         Bot bot = new Bot(waiter, config, settings);
 
-//        AboutCommand aboutCommand = new AboutCommand(Color.BLUE.brighter(),
-//                "a music bot that is [easy to host yourself!](https://github.com/jagrosh/MusicBot) (v" + version + ")",
-//                new String[]{"High-quality music playback", "FairQueue™ Technology", "Easy to host yourself"},
-//                RECOMMENDED_PERMS);
-//        aboutCommand.setIsAuthor(false);
-//        aboutCommand.setReplacementCharacter("\uD83C\uDFB6"); // 🎶
-
         BlindTest blindTest = new BlindTest(config);
         PropositionListener propositionListener = new PropositionListener();
 
@@ -103,12 +93,15 @@ public class JMusicBot {
                 .setLinkedCacheSize(200)
                 .setGuildSettingsManager(settings)
                 .addCommands(
-                        new BTRulesCmd(bot, blindTest),
-                        new BTPoolCmd(bot, blindTest),
+                        new BTBackupCmd(blindTest),
+                        new BTRestoreCmd(blindTest),
+                        new BTLockPoolCmd(blindTest),
+                        new BTPublicRulesCmd(blindTest),
+                        new BTPublicPoolCmd(blindTest),
+                        new BTPublicScoreboardCmd(blindTest),
                         new BTDMAddCmd(bot, blindTest),
                         new BTDMListCmd(bot, blindTest),
                         new BTDMRemoveCmd(bot, blindTest),
-                        new BTScoreboardCmd(bot, blindTest),
                         new BTNextCmd(bot, blindTest, propositionListener),
                         //                        new PingCommand(),
                         //                        new SettingsCmd(bot),
@@ -133,7 +126,6 @@ public class JMusicBot {
                         //                        new SkiptoCmd(bot),
                         new StopCmd(bot, blindTest),
                         new VolumeCmd(bot)
-                        //
                         //                        new PrefixCmd(bot),
                         //                        new SetdjCmd(bot),
                         //                        new SettcCmd(bot),

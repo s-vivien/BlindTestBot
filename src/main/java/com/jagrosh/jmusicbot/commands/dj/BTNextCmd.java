@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jagrosh.jmusicbot.commands.blindtest;
+package com.jagrosh.jmusicbot.commands.dj;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.BlindTest;
 import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.audio.QueuedTrack;
 import com.jagrosh.jmusicbot.commands.DJCommand;
-import com.jagrosh.jmusicbot.commands.MusicCommand;
 import com.jagrosh.jmusicbot.listener.PropositionListener;
-import com.sapher.youtubedl.YoutubeDL;
-import com.sapher.youtubedl.YoutubeDLRequest;
-import com.sapher.youtubedl.YoutubeDLResponse;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
@@ -38,7 +30,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTNextCmd extends MusicCommand {
+public class BTNextCmd extends DJCommand {
 
     private BlindTest blindTest;
     private Bot bot;
@@ -50,7 +42,7 @@ public class BTNextCmd extends MusicCommand {
         this.blindTest = blindTest;
         this.bot = bot;
         this.name = "next";
-        this.help = "Pick a random next song for the blindtest";
+        this.help = "picks a random next song for the blindtest";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.beListening = true;
         this.bePlaying = false;
@@ -60,10 +52,17 @@ public class BTNextCmd extends MusicCommand {
     @Override
     public void doCommand(CommandEvent commandEvent) {
         if (DJCommand.checkDJPermission(commandEvent)) {
-            if (!blindTest.pickRandomNextSong()) {
-                commandEvent.reply("Toutes les chansons ont été jouées :'(");
+
+            AudioHandler handler = (AudioHandler) commandEvent.getGuild().getAudioManager().getSendingHandler();
+            if (handler.getPlayer().getPlayingTrack() != null) {
+                commandEvent.reply("La chanson précédente n'est pas terminée :upside_down:");
                 return;
             }
+            if (!blindTest.pickRandomNextSong()) {
+                commandEvent.reply("Toutes les chansons ont été jouées :tired_face:");
+                return;
+            }
+
             bot.getPlayerManager().loadItem(blindTest.getCurrentSongEntry().getUrl(), new BTNextCmd.ResultHandler(commandEvent));
         }
     }
@@ -82,7 +81,7 @@ public class BTNextCmd extends MusicCommand {
             AudioHandler handler = (AudioHandler) event.getGuild().getAudioManager().getSendingHandler();
             handler.setOnTrackEndLambda(() -> event.reply(blindTest.onTrackEnd()));
             propositionListener.setOnPropositionLambda((author, prop) -> {
-//                if (author.equalsIgnoreCase(songEntry.getOwner())) return null;
+                if (author.equalsIgnoreCase(songEntry.getOwner())) return null;
                 String reply = blindTest.onProposition(author, prop);
                 if (reply != null) {
                     event.reply(reply);

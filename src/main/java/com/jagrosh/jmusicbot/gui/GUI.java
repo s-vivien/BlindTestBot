@@ -15,12 +15,11 @@
  */
 package com.jagrosh.jmusicbot.gui;
 
+import com.jagrosh.jmusicbot.Bot;
+
+import javax.swing.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import javax.swing.JFrame;
-import javax.swing.JTabbedPane;
-import javax.swing.WindowConstants;
-import com.jagrosh.jmusicbot.Bot;
 
 
 /**

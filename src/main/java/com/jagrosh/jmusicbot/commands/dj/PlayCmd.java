@@ -13,13 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jagrosh.jmusicbot.commands.music;
+package com.jagrosh.jmusicbot.commands.dj;
 
-import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException.Severity;
-import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jdautilities.menu.ButtonMenu;
@@ -30,17 +25,21 @@ import com.jagrosh.jmusicbot.commands.DJCommand;
 import com.jagrosh.jmusicbot.commands.MusicCommand;
 import com.jagrosh.jmusicbot.playlist.PlaylistLoader.Playlist;
 import com.jagrosh.jmusicbot.utils.FormatUtil;
-
-import java.util.concurrent.TimeUnit;
-
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException.Severity;
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.exceptions.PermissionException;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class PlayCmd extends MusicCommand {
+public class PlayCmd extends DJCommand {
     private final static String LOAD = "\uD83D\uDCE5"; // 📥
     private final static String CANCEL = "\uD83D\uDEAB"; // 🚫
 
@@ -50,7 +49,8 @@ public class PlayCmd extends MusicCommand {
         super(bot);
         this.loadingEmoji = bot.getConfig().getLoading();
         this.name = "play";
-        this.help = "Unpause the previously paused song";
+        this.arguments = "<URL> or None if a songs has been paused";
+        this.help = "plays the provided song or unpause previously paused song";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.beListening = true;
         this.bePlaying = false;
@@ -59,25 +59,16 @@ public class PlayCmd extends MusicCommand {
 
     @Override
     public void doCommand(CommandEvent event) {
-        if (event.getArgs().isEmpty() && event.getMessage().getAttachments().isEmpty()) {
-            AudioHandler handler = (AudioHandler) event.getGuild().getAudioManager().getSendingHandler();
-            if (handler.getPlayer().getPlayingTrack() != null && handler.getPlayer().isPaused()) {
-                if (DJCommand.checkDJPermission(event)) {
+        if (DJCommand.checkDJPermission(event)) {
+            if (event.getArgs().isEmpty() && event.getMessage().getAttachments().isEmpty()) {
+                AudioHandler handler = (AudioHandler) event.getGuild().getAudioManager().getSendingHandler();
+                if (handler.getPlayer().getPlayingTrack() != null && handler.getPlayer().isPaused()) {
                     handler.getPlayer().setPaused(false);
-                    //                    event.replySuccess("Resumed **"+handler.getPlayer().getPlayingTrack().getInfo().title+"**.");
-                } else
-                    event.replyError("Only DJs can unpause the player!");
+                    return;
+                }
                 return;
             }
-            //            StringBuilder builder = new StringBuilder(event.getClient().getWarning()+" Play Commands:\n");
-            //            builder.append("\n`").append(event.getClient().getPrefix()).append(name).append(" <song title>` - plays the first result from Youtube");
-            //            builder.append("\n`").append(event.getClient().getPrefix()).append(name).append(" <URL>` - plays the provided song, playlist, or stream");
-            //            for(Command cmd: children)
-            //                builder.append("\n`").append(event.getClient().getPrefix()).append(name).append(" ").append(cmd.getName()).append(" ").append(cmd.getArguments()).append("` - ").append(cmd.getHelp());
-            //            event.reply(builder.toString());
-            return;
-        }
-        if (DJCommand.checkDJPermission(event)) {
+
             String args = event.getArgs().startsWith("<") && event.getArgs().endsWith(">")
                     ? event.getArgs().substring(1, event.getArgs().length() - 1)
                     : event.getArgs().isEmpty() ? event.getMessage().getAttachments().get(0).getUrl() : event.getArgs();

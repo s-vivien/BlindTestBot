@@ -15,25 +15,21 @@
  */
 package com.jagrosh.jmusicbot.commands.blindtest;
 
-import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.BlindTest;
-import com.jagrosh.jmusicbot.Bot;
+import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTRulesCmd extends Command {
+public class BTPublicRulesCmd extends BTPublicCommand {
 
     private BlindTest blindTest;
-    private Bot bot;
 
-    public BTRulesCmd(Bot bot, BlindTest blindTest) {
+    public BTPublicRulesCmd(BlindTest blindTest) {
         this.blindTest = blindTest;
-        this.bot = bot;
         this.name = "rules";
-        this.help = "Prints the rules";
-        this.aliases = bot.getConfig().getAliases(this.name);
+        this.help = "prints the rules";
         this.guildOnly = true;
     }
 
@@ -48,6 +44,7 @@ public class BTRulesCmd extends Command {
                        ":bulb: **Règles du blind-test :** :bulb:\n" +
                        "* Quand la chanson démarre, tout le monde tape ses propositions directement dans le chan général\n" +
                        "* 1 point est donné à la première personne qui trouve le titre, 1 point pour l'artiste, et 3 points si les deux sont donnés en même temps (et qu'aucun des deux n'avait été trouvé au préalable)\n" +
+                       "* Si personne ne trouve ni l'artiste ni le titre, 1 point est retiré à la personne qui a proposé la chanson\n" +
                        "\n" +
                        "*Pour obtenir la liste des commandes disponibles, taper `!help`*";
         commandEvent.reply(rules);

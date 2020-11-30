@@ -17,29 +17,26 @@ package com.jagrosh.jmusicbot.commands.blindtest;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.BlindTest;
-import com.jagrosh.jmusicbot.Bot;
-import com.jagrosh.jmusicbot.commands.BTDMCommand;
+import com.jagrosh.jmusicbot.commands.BTDJCommand;
+import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTDMListCmd extends BTDMCommand {
+public class BTLockPoolCmd extends BTDJCommand {
 
     private BlindTest blindTest;
 
-    public BTDMListCmd(Bot bot, BlindTest blindTest) {
-        super(bot);
+    public BTLockPoolCmd(BlindTest blindTest) {
         this.blindTest = blindTest;
-        this.name = "list";
-        this.help = "list the added songs";
-        this.aliases = bot.getConfig().getAliases(this.name);
-        this.guildOnly = false;
+        this.name = "lock";
+        this.help = "lock/unlock the submissions";
+        this.guildOnly = true;
     }
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        String author = commandEvent.getMessage().getAuthor().getName();
-        commandEvent.reply(blindTest.getSongList(author));
+        boolean lock = blindTest.swapLock();
+        commandEvent.reply("Les propositions de chansons sont désormais **" + (lock ? "FERMEES" : "OUVERTES") + "**");
     }
-
 }

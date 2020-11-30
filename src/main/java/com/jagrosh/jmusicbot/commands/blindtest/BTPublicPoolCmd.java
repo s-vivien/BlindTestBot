@@ -15,30 +15,26 @@
  */
 package com.jagrosh.jmusicbot.commands.blindtest;
 
-import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.BlindTest;
-import com.jagrosh.jmusicbot.Bot;
+import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTScoreboardCmd extends Command {
+public class BTPublicPoolCmd extends BTPublicCommand {
 
     private BlindTest blindTest;
-    private Bot bot;
 
-    public BTScoreboardCmd(Bot bot, BlindTest blindTest) {
+    public BTPublicPoolCmd(BlindTest blindTest) {
         this.blindTest = blindTest;
-        this.bot = bot;
-        this.name = "scores";
-        this.help = "Prints the scoreboard";
-        this.aliases = bot.getConfig().getAliases(this.name);
+        this.name = "pool";
+        this.help = "prints the song pool";
         this.guildOnly = true;
     }
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        commandEvent.reply(blindTest.getScoreBoard());
+        commandEvent.reply(blindTest.getSongPool());
     }
 }

@@ -18,14 +18,11 @@ package com.jagrosh.jmusicbot.commands.blindtest;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.BlindTest;
 import com.jagrosh.jmusicbot.Bot;
-import com.jagrosh.jmusicbot.audio.AudioHandler;
-import com.jagrosh.jmusicbot.commands.music.PlayCmd;
+import com.jagrosh.jmusicbot.commands.BTDMCommand;
 import com.sapher.youtubedl.YoutubeDL;
-import com.sapher.youtubedl.YoutubeDLException;
 import com.sapher.youtubedl.YoutubeDLRequest;
 import com.sapher.youtubedl.YoutubeDLResponse;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
@@ -36,24 +33,24 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTDMAddCmd extends Command {
+public class BTDMAddCmd extends BTDMCommand {
 
     private BlindTest blindTest;
-    private Bot bot;
 
     public BTDMAddCmd(Bot bot, BlindTest blindTest) {
+        super(bot);
         this.blindTest = blindTest;
-        this.bot = bot;
         this.name = "add";
         this.arguments = "<Youtube URL>";
-        this.help = "Adds song to the blindtest pool";
+        this.help = "adds song to the blindtest pool";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.guildOnly = false;
     }
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        bot.getPlayerManager().loadItem(commandEvent.getArgs(), new BTDMAddCmd.ResultHandler(commandEvent));
+        if (blindTest.getLock()) commandEvent.reply("Il n'est plus possible de changer les propositions");
+        else bot.getPlayerManager().loadItem(commandEvent.getArgs(), new BTDMAddCmd.ResultHandler(commandEvent));
     }
 
     private TrackInfo extractArtistAndTrack(String videoUrl) {
@@ -102,34 +99,31 @@ public class BTDMAddCmd extends Command {
 
         @Override
         public void trackLoaded(AudioTrack audioTrack) {
-            System.err.println("trackLoaded");
             String author = event.getMessage().getAuthor().getName();
             String url = event.getMessage().getContentRaw().substring("!add ".length());
-
             TrackInfo info = extractArtistAndTrack(url);
-//            TrackInfo info = new TrackInfo("fa","ke");
             if (info == null) event.reply("Erreur durant l'extraction des informations de la chanson ... Déso");
             else {
                 int addResult = blindTest.addSongRequest(author, url, info.artist, info.track);
                 if (addResult == 1) event.reply("Cette chanson avait déjà été ajoutée");
                 else if (addResult == 2) event.reply("Il n'y a plus de place, nombre maximum de chansons atteint");
-                else event.reply(blindTest.getSongList(author));
+                else event.reply("Chanson ajoutée, les joueurs devront taper les valeurs entre crochets pour marquer les points. Pensez à check qu'elles sont correctes.\n" + blindTest.getSongList(author));
             }
         }
 
         @Override
         public void playlistLoaded(AudioPlaylist audioPlaylist) {
-            event.reply("Je veux pas de playlist, uniquement des chansons");
+            event.reply("Je veux pas de playlist, uniquement des chansons..");
         }
 
         @Override
         public void noMatches() {
-            event.reply("noMatches");
+            event.reply("Mauvais paramètre..");
         }
 
         @Override
         public void loadFailed(FriendlyException e) {
-            event.reply("loadFailed");
+            event.reply("Le chargement de la vidéo a échoué..");
         }
     }
 

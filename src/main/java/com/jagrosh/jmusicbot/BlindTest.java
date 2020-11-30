@@ -1,5 +1,16 @@
 package com.jagrosh.jmusicbot;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -7,14 +18,18 @@ import java.util.stream.Collectors;
 
 public class BlindTest {
 
+    private Gson GSON = new Gson();
     static final int SINGLE_SCORE = 1;
     static final int COMBO_SCORE = 3;
     static final int NOTFOUND_SCORE = -1;
     static final int MAX_DIST = 2;
 
+    // State
     Map<String, LinkedHashSet<SongEntry>> entries = new HashMap<>();
     Map<String, Integer> scores = new HashMap<>();
+    boolean locked = false;
     Integer songsPerPlayer;
+    String backupPath;
 
     // Current song
     SongEntry currentSongEntry = null;
@@ -22,12 +37,7 @@ public class BlindTest {
 
     public BlindTest(BotConfig cfg) {
         songsPerPlayer = cfg.getSongsPerPlayer();
-    }
-
-    private List<SongEntry> getFlatEntries() {
-        List<SongEntry> entryList = new ArrayList<>();
-        entries.entrySet().forEach(e -> entryList.addAll(e.getValue()));
-        return entryList;
+        backupPath = cfg.getBackupPath();
     }
 
     public void clearCurrentSong() {
@@ -130,7 +140,7 @@ public class BlindTest {
         entries.computeIfAbsent(author, k -> new LinkedHashSet<>());
         scores.putIfAbsent(author, 0);
         if (entries.get(author).size() >= songsPerPlayer) return 2;
-        SongEntry se = new SongEntry(url, author, artist.toLowerCase(), cleanTitle(title.toLowerCase()));
+        SongEntry se = new SongEntry(url, author, cleanLight(artist.toLowerCase()), cleanTitle(title.toLowerCase()), artist + " - " + title);
         return entries.get(author).add(se) ? 0 : 1;
     }
 
@@ -151,7 +161,7 @@ public class BlindTest {
     }
 
     public String onTrackEnd() {
-        String reply = "⏳ La chanson était **[ " + currentSongEntry.artist + " - " + currentSongEntry.title + " ]**";
+        String reply = "⏳ La chanson était **[ " + currentSongEntry.completeOriginalTitle + " ]**";
         if (trackFound == null && artistFound == null) {
             addScore(currentSongEntry.getOwner(), NOTFOUND_SCORE);
             return reply + " et personne ne l'a trouvée .. (" + NOTFOUND_SCORE + " pour " + currentSongEntry.getOwner() + ")";
@@ -168,32 +178,110 @@ public class BlindTest {
         int i = 1;
         while (it.hasNext()) {
             SongEntry e = it.next();
-            list += i + " : <" + e.url + "> [" + e.artist + "-" + e.title + "]\n";
+            list += i + " : <" + e.url + "> [" + e.artist + "] [" + e.title + "]\n";
             i++;
         }
         if (entrySet.size() < songsPerPlayer) {
             int diff = songsPerPlayer - entrySet.size();
-            list += "Il te manque encore " + diff + "  chanson" + (diff > 1 ? "s" : "");
+            list += "Il te manque encore " + diff + " chanson" + (diff > 1 ? "s" : "");
         }
         return list;
     }
 
-    public void addScore(String nick, int score) {
+    public SongEntry getCurrentSongEntry() {
+        return currentSongEntry;
+    }
+
+    public boolean getLock() {
+        return locked;
+    }
+
+    public boolean swapLock() {
+        locked = !locked;
+        return locked;
+    }
+
+    private void addScore(String nick, int score) {
         Integer previousScore = scores.get(nick);
         if (previousScore == null) previousScore = 0;
         previousScore += score;
         scores.put(nick, previousScore);
     }
 
+    private int writeToFile(String path, String content) {
+        Path p = Paths.get(path);
+        if (p.toFile().exists()) return 2;
+        try (BufferedWriter writer = Files.newBufferedWriter(p)) {
+            writer.write(content);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 1;
+        }
+        return 0;
+    }
+
+    private String readFile(String path) {
+        Path p = Paths.get(path);
+        String content = "";
+        try (BufferedReader reader = Files.newBufferedReader(p)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content += line + System.lineSeparator();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return content;
+    }
+
+    private String computeBackFilePath(String name) {
+        return backupPath + File.separator + name + ".json";
+    }
+
+    public String backupState(String name) {
+        String entriesJson = GSON.toJson(entries);
+        int er = writeToFile(computeBackFilePath("entries_" + name), entriesJson);
+        if (er == 1) return "Erreur lors du backup..";
+        else if (er == 2) return "Un backup portant le même nom existe déjà..";
+        String scoresJson = GSON.toJson(scores);
+        er = writeToFile(computeBackFilePath("scores_" + name), scoresJson);
+        if (er == 1) return "Erreur lors du backup..";
+        else if (er == 2) return "Un backup portant le même nom existe déjà..";
+        return "Backup réalisé avec succès !";
+    }
+
+    public String restoreState(String name) {
+        String entriesJson = readFile(computeBackFilePath("entries_" + name));
+        if (entriesJson.isEmpty()) return "Erreur lors de la restauration du backup..";
+        String scoresJson = readFile(computeBackFilePath("scores_" + name));
+        if (scoresJson.isEmpty()) return "Erreur lors de la restauration du backup..";
+        try {
+            Type entriesType = new TypeToken<HashMap<String, LinkedHashSet<SongEntry>>>() {}.getType();
+            this.entries = GSON.fromJson(entriesJson, entriesType);
+            Type scoresType = new TypeToken<HashMap<String, Integer>>() {}.getType();
+            this.scores = GSON.fromJson(scoresJson, scoresType);
+        } catch (Exception e) {
+            return "Erreur lors de la restauration du backup.."; // lol duplicated strings go brr brr
+        }
+        return "Restauration réalisée avec succès !";
+    }
+
+    private List<SongEntry> getFlatEntries() {
+        List<SongEntry> entryList = new ArrayList<>();
+        entries.entrySet().forEach(e -> entryList.addAll(e.getValue()));
+        return entryList;
+    }
+
+    private String cleanLight(String title) {
+        return title.replaceAll(",", "");
+    }
+
     private String cleanTitle(String title) {
+        title = cleanLight(title);
         Pattern pattern = Pattern.compile("(.+)(\\(.+\\))", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(title);
         boolean matchFound = matcher.find();
         return matchFound ? matcher.group(1).trim() : title.trim();
-    }
-
-    public SongEntry getCurrentSongEntry() {
-        return currentSongEntry;
     }
 
     private int calculate(String x, String y) {
@@ -217,11 +305,11 @@ public class BlindTest {
         return dp[x.length()][y.length()];
     }
 
-    public static int costOfSubstitution(char a, char b) {
+    private static int costOfSubstitution(char a, char b) {
         return a == b ? 0 : 1;
     }
 
-    public static int min(int... numbers) {
+    private static int min(int... numbers) {
         return Arrays.stream(numbers)
                 .min().orElse(Integer.MAX_VALUE);
     }
@@ -231,13 +319,20 @@ public class BlindTest {
         String owner;
         String artist;
         String title;
+        String completeOriginalTitle;
         boolean done = false;
 
-        public SongEntry(String url, String owner, String artist, String title) {
+        public SongEntry(String url, String owner) {
+            this.url = url;
+            this.owner = owner;
+        }
+
+        public SongEntry(String url, String owner, String artist, String title, String completeOriginalTitle) {
             this.url = url;
             this.owner = owner;
             this.artist = artist;
             this.title = title;
+            this.completeOriginalTitle = completeOriginalTitle;
         }
 
         @Override
@@ -257,9 +352,5 @@ public class BlindTest {
         public String getOwner() {
             return owner;
         }
-    }
-
-    public Integer getSongsPerPlayer() {
-        return songsPerPlayer;
     }
 }

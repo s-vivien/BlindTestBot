@@ -17,29 +17,25 @@ package com.jagrosh.jmusicbot.commands.blindtest;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.BlindTest;
-import com.jagrosh.jmusicbot.Bot;
-import com.jagrosh.jmusicbot.commands.BTDMCommand;
+import com.jagrosh.jmusicbot.commands.BTDJCommand;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTDMListCmd extends BTDMCommand {
+public class BTBackupCmd extends BTDJCommand {
 
     private BlindTest blindTest;
 
-    public BTDMListCmd(Bot bot, BlindTest blindTest) {
-        super(bot);
+    public BTBackupCmd(BlindTest blindTest) {
         this.blindTest = blindTest;
-        this.name = "list";
-        this.help = "list the added songs";
-        this.aliases = bot.getConfig().getAliases(this.name);
-        this.guildOnly = false;
+        this.name = "backup";
+        this.arguments = "<Backup name>";
+        this.help = "backups the state of the game";
+        this.guildOnly = true;
     }
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        String author = commandEvent.getMessage().getAuthor().getName();
-        commandEvent.reply(blindTest.getSongList(author));
+        commandEvent.reply(blindTest.backupState(commandEvent.getArgs()));
     }
-
 }

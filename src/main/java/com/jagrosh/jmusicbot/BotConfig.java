@@ -19,28 +19,28 @@ import com.jagrosh.jmusicbot.entities.Prompt;
 import com.jagrosh.jmusicbot.utils.FormatUtil;
 import com.jagrosh.jmusicbot.utils.OtherUtil;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import com.typesafe.config.*;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigFactory;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 /**
- * 
- * 
  * @author John Grosh (jagrosh)
  */
-public class BotConfig
-{
+public class BotConfig {
     private final Prompt prompt;
     private final static String CONTEXT = "Config";
     private final static String START_TOKEN = "/// START OF JMUSICBOT CONFIG ///";
     private final static String END_TOKEN = "/// END OF JMUSICBOT CONFIG ///";
-    
+
     private Path path = null;
     private String token, prefix, altprefix, helpWord, playlistsFolder,
-            successEmoji, warningEmoji, errorEmoji, loadingEmoji, searchingEmoji;
+            successEmoji, warningEmoji, errorEmoji, loadingEmoji, searchingEmoji, backupPath;
     private boolean stayInChannel, songInGame, npImages, updatealerts, useEval, dbots;
     private long owner, maxSeconds;
     private int songsPerPlayer;
@@ -48,35 +48,31 @@ public class BotConfig
     private Activity game;
     private Config aliases;
 
-
     private boolean valid = false;
-    
-    public BotConfig(Prompt prompt)
-    {
+
+    public BotConfig(Prompt prompt) {
         this.prompt = prompt;
     }
-    
-    public void load()
-    {
+
+    public void load() {
         valid = false;
-        
+
         // read config from file
-        try 
-        {
+        try {
             // get the path to the config, default config.txt
             path = OtherUtil.getPath(System.getProperty("config.txt", System.getProperty("config", "config.txt")));
-            if(path.toFile().exists())
-            {
-                if(System.getProperty("config.txt") == null)
+            if (path.toFile().exists()) {
+                if (System.getProperty("config.txt") == null)
                     System.setProperty("config.txt", System.getProperty("config", "config.txt"));
                 ConfigFactory.invalidateCaches();
             }
-            
+
             // load in the config file, plus the default values
             Config config = ConfigFactory.parseFile(path.toFile()).withFallback(ConfigFactory.load());
-//            Config config = ConfigFactory.load();
-            
+            //            Config config = ConfigFactory.load();
+
             // set values
+            backupPath = config.getString("backupPath");
             token = config.getString("token");
             prefix = config.getString("prefix");
             altprefix = config.getString("altprefix");
@@ -99,205 +95,162 @@ public class BotConfig
             aliases = config.getConfig("aliases");
             dbots = owner == 113156185389092864L;
             songsPerPlayer = config.getInt("songsPerPlayer");
-            
+
             // we may need to write a new config file
             boolean write = false;
 
             // validate bot token
-            if(token==null || token.isEmpty() || token.equalsIgnoreCase("BOT_TOKEN_HERE"))
-            {
+            if (token == null || token.isEmpty() || token.equalsIgnoreCase("BOT_TOKEN_HERE")) {
                 token = prompt.prompt("Please provide a bot token."
-                        + "\nInstructions for obtaining a token can be found here:"
-                        + "\nhttps://github.com/jagrosh/MusicBot/wiki/Getting-a-Bot-Token."
-                        + "\nBot Token: ");
-                if(token==null)
-                {
+                                      + "\nInstructions for obtaining a token can be found here:"
+                                      + "\nhttps://github.com/jagrosh/MusicBot/wiki/Getting-a-Bot-Token."
+                                      + "\nBot Token: ");
+                if (token == null) {
                     prompt.alert(Prompt.Level.WARNING, CONTEXT, "No token provided! Exiting.\n\nConfig Location: " + path.toAbsolutePath().toString());
                     return;
-                }
-                else
-                {
+                } else {
                     write = true;
                 }
             }
-            
+
             // validate bot owner
-            if(owner<=0)
-            {
-                try
-                {
+            if (owner <= 0) {
+                try {
                     owner = Long.parseLong(prompt.prompt("Owner ID was missing, or the provided owner ID is not valid."
-                        + "\nPlease provide the User ID of the bot's owner."
-                        + "\nInstructions for obtaining your User ID can be found here:"
-                        + "\nhttps://github.com/jagrosh/MusicBot/wiki/Finding-Your-User-ID"
-                        + "\nOwner User ID: "));
-                }
-                catch(NumberFormatException | NullPointerException ex)
-                {
+                                                         + "\nPlease provide the User ID of the bot's owner."
+                                                         + "\nInstructions for obtaining your User ID can be found here:"
+                                                         + "\nhttps://github.com/jagrosh/MusicBot/wiki/Finding-Your-User-ID"
+                                                         + "\nOwner User ID: "));
+                } catch (NumberFormatException | NullPointerException ex) {
                     owner = 0;
                 }
-                if(owner<=0)
-                {
+                if (owner <= 0) {
                     prompt.alert(Prompt.Level.ERROR, CONTEXT, "Invalid User ID! Exiting.\n\nConfig Location: " + path.toAbsolutePath().toString());
                     return;
-                }
-                else
-                {
+                } else {
                     write = true;
                 }
             }
-            
-            if(write)
+
+            if (write)
                 writeToFile();
-            
+
             // if we get through the whole config, it's good to go
             valid = true;
-        }
-        catch (ConfigException ex)
-        {
+        } catch (ConfigException ex) {
             prompt.alert(Prompt.Level.ERROR, CONTEXT, ex + ": " + ex.getMessage() + "\n\nConfig Location: " + path.toAbsolutePath().toString());
         }
     }
-    
-    private void writeToFile()
-    {
+
+    private void writeToFile() {
         String original = OtherUtil.loadResource(this, "/reference.conf");
         byte[] bytes;
-        if(original==null)
-        {
-            bytes = ("token = "+token+"\r\nowner = "+owner).getBytes();
+        if (original == null) {
+            bytes = ("token = " + token + "\r\nowner = " + owner).getBytes();
+        } else {
+            bytes = original.substring(original.indexOf(START_TOKEN) + START_TOKEN.length(), original.indexOf(END_TOKEN))
+                    .replace("BOT_TOKEN_HERE", token)
+                    .replace("0 // OWNER ID", Long.toString(owner))
+                    .trim().getBytes();
         }
-        else
-        {
-            bytes = original.substring(original.indexOf(START_TOKEN)+START_TOKEN.length(), original.indexOf(END_TOKEN))
-                .replace("BOT_TOKEN_HERE", token)
-                .replace("0 // OWNER ID", Long.toString(owner))
-                .trim().getBytes();
-        }
-        try 
-        {
+        try {
             Files.write(path, bytes);
-        }
-        catch(IOException ex) 
-        {
-            prompt.alert(Prompt.Level.WARNING, CONTEXT, "Failed to write new config options to config.txt: "+ex
-                + "\nPlease make sure that the files are not on your desktop or some other restricted area.\n\nConfig Location: " 
-                + path.toAbsolutePath().toString());
+        } catch (IOException ex) {
+            prompt.alert(Prompt.Level.WARNING, CONTEXT, "Failed to write new config options to config.txt: " + ex
+                                                        + "\nPlease make sure that the files are not on your desktop or some other restricted area.\n\nConfig Location: "
+                                                        + path.toAbsolutePath().toString());
         }
     }
-    
-    public boolean isValid()
-    {
+
+    public boolean isValid() {
         return valid;
     }
-    
-    public String getConfigLocation()
-    {
+
+    public String getConfigLocation() {
         return path.toFile().getAbsolutePath();
     }
-    
-    public String getPrefix()
-    {
+
+    public String getPrefix() {
         return prefix;
     }
-    
-    public String getAltPrefix()
-    {
+
+    public String getAltPrefix() {
         return "NONE".equalsIgnoreCase(altprefix) ? null : altprefix;
     }
-    
-    public String getToken()
-    {
+
+    public String getToken() {
         return token;
     }
-    
-    public long getOwnerId()
-    {
+
+    public long getOwnerId() {
         return owner;
     }
-    
-    public String getSuccess()
-    {
+
+    public String getSuccess() {
         return successEmoji;
     }
-    
-    public String getWarning()
-    {
+
+    public String getWarning() {
         return warningEmoji;
     }
-    
-    public String getError()
-    {
+
+    public String getError() {
         return errorEmoji;
     }
-    
-    public String getLoading()
-    {
+
+    public String getLoading() {
         return loadingEmoji;
     }
-    
-    public String getSearching()
-    {
+
+    public String getSearching() {
         return searchingEmoji;
     }
-    
-    public Activity getGame()
-    {
+
+    public Activity getGame() {
         return game;
     }
-    
-    public OnlineStatus getStatus()
-    {
+
+    public OnlineStatus getStatus() {
         return status;
     }
-    
-    public String getHelp()
-    {
+
+    public String getHelp() {
         return helpWord;
     }
-    
-    public boolean getStay()
-    {
+
+    public boolean getStay() {
         return stayInChannel;
     }
-    
-    public boolean getSongInStatus()
-    {
+
+    public boolean getSongInStatus() {
         return songInGame;
     }
-    
-    public String getPlaylistsFolder()
-    {
+
+    public String getPlaylistsFolder() {
         return playlistsFolder;
     }
-    
-    public boolean getDBots()
-    {
+
+    public boolean getDBots() {
         return dbots;
     }
-    
-    public boolean useUpdateAlerts()
-    {
+
+    public boolean useUpdateAlerts() {
         return updatealerts;
     }
-    
-    public boolean useEval()
-    {
+
+    public boolean useEval() {
         return useEval;
     }
-    
-    public boolean useNPImages()
-    {
+
+    public boolean useNPImages() {
         return npImages;
     }
-    
-    public long getMaxSeconds()
-    {
+
+    public long getMaxSeconds() {
         return maxSeconds;
     }
-    
-    public String getMaxTime()
-    {
+
+    public String getMaxTime() {
         return FormatUtil.formatTime(maxSeconds * 1000);
     }
 
@@ -305,21 +258,20 @@ public class BotConfig
         return songsPerPlayer;
     }
 
-    public boolean isTooLong(AudioTrack track)
-    {
-        if(maxSeconds<=0)
-            return false;
-        return Math.round(track.getDuration()/1000.0) > maxSeconds;
+    public String getBackupPath() {
+        return backupPath;
     }
 
-    public String[] getAliases(String command)
-    {
-        try
-        {
+    public boolean isTooLong(AudioTrack track) {
+        if (maxSeconds <= 0)
+            return false;
+        return Math.round(track.getDuration() / 1000.0) > maxSeconds;
+    }
+
+    public String[] getAliases(String command) {
+        try {
             return aliases.getStringList(command).toArray(new String[0]);
-        }
-        catch(NullPointerException | ConfigException.Missing e)
-        {
+        } catch (NullPointerException | ConfigException.Missing e) {
             return new String[0];
         }
     }

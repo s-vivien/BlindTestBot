@@ -15,39 +15,42 @@
  */
 package com.jagrosh.jmusicbot.commands.blindtest;
 
-import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.BlindTest;
 import com.jagrosh.jmusicbot.Bot;
+import com.jagrosh.jmusicbot.commands.BTDMCommand;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTDMRemoveCmd extends Command {
+public class BTDMRemoveCmd extends BTDMCommand {
 
     private BlindTest blindTest;
-    private Bot bot;
 
     public BTDMRemoveCmd(Bot bot, BlindTest blindTest) {
+        super(bot);
         this.blindTest = blindTest;
-        this.bot = bot;
         this.name = "remove";
         this.arguments = "<Song index>";
-        this.help = "Removes song from the blindtest pool";
+        this.help = "removes song from the blindtest pool";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.guildOnly = false;
     }
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        String author = commandEvent.getMessage().getAuthor().getName();
-        Integer idx;
-        try {
-            idx = Integer.valueOf(commandEvent.getArgs());
-            if (blindTest.removeSongRequest(author, idx) == 0) commandEvent.reply("Chanson retirée avec succès\n" + blindTest.getSongList(author));
-            else commandEvent.reply("Aucune chanson ne correspond à cet index");
-        } catch (Exception e) {
-            commandEvent.reply("Index au mauvais format");
+        if (blindTest.getLock()) commandEvent.reply("Il n'est plus possible de changer les propositions");
+        else {
+            String author = commandEvent.getMessage().getAuthor().getName();
+            Integer idx;
+            try {
+                idx = Integer.valueOf(commandEvent.getArgs());
+                int removeResult = blindTest.removeSongRequest(author, idx);
+                if (removeResult == 1) commandEvent.reply("Aucune chanson ne correspond à cet index");
+                else commandEvent.reply("Chanson retirée avec succès\n" + blindTest.getSongList(author));
+            } catch (Exception e) {
+                commandEvent.reply("Index au mauvais format");
+            }
         }
     }
 

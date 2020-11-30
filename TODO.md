@@ -1,2 +1,3 @@
 - Bloquer les soumissions de chansons quand le BT est démarré
 - Rendre le tout persisté (scores, pool de chansons, chansons déja jouées, etc) crash-proof
+- Remettre le SKIP
