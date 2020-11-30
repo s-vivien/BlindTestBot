@@ -17,12 +17,14 @@ package com.jagrosh.jmusicbot.commands;
 
 import com.jagrosh.jdautilities.command.Command;
 
+import static com.jagrosh.jmusicbot.commands.DJCommand.checkDJPermission;
+
 /**
  * @author John Grosh (john.a.grosh@gmail.com)
  */
 public abstract class BTDJCommand extends Command {
 
     public BTDJCommand() {
-        this.category = new Category("Blind-Test public");
+        this.category = new Category("Blind-Test DJ", event -> checkDJPermission(event));
     }
 }
