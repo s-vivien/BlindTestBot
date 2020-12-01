@@ -67,7 +67,7 @@ public class BTDMAddCmd extends BTDMCommand {
             this.author = event.getMessage().getAuthor().getName();
         }
 
-        private void addSingleTrack(AudioTrack audioTrack) {
+        private int addSingleTrack(AudioTrack audioTrack) {
             TrackInfo info = extractArtistAndTrack(audioTrack.getInfo().uri);
             int addResult = blindTest.addSongRequest(author, audioTrack.getInfo().uri, info != null ? info.artist : "N/A", info != null ? info.track : "N/A");
             String reply = "Ajout de **" + audioTrack.getInfo().title + "** ... ";
@@ -75,6 +75,7 @@ public class BTDMAddCmd extends BTDMCommand {
             else if (addResult == 2) reply += ":no_entry_sign: Il n'y a plus de place, nombre maximum de chansons atteint";
             else reply += ":white_check_mark: Chanson ajoutée avec succès" + (info == null ? " (:rotating_light: probable erreur dans le titre/artiste)" : "");
             event.reply(reply);
+            return addResult;
         }
 
         private void finalReply() {
@@ -90,7 +91,7 @@ public class BTDMAddCmd extends BTDMCommand {
         @Override
         public void playlistLoaded(AudioPlaylist audioPlaylist) {
             for (AudioTrack audioTrack : audioPlaylist.getTracks()) {
-                addSingleTrack(audioTrack);
+                if (addSingleTrack(audioTrack) == 2) break;
             }
             finalReply();
         }

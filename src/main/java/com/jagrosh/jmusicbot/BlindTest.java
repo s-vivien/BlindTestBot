@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -26,7 +27,7 @@ public class BlindTest {
     private static final int MAX_DIST = 2;
 
     // State
-    Map<String, LinkedHashSet<SongEntry>> entries = new HashMap<>();
+    ConcurrentHashMap<String, LinkedHashSet<SongEntry>> entries = new ConcurrentHashMap<>();
     Map<String, Integer> scores = new HashMap<>();
     boolean locked = false;
     Integer songsPerPlayer;
@@ -276,23 +277,23 @@ public class BlindTest {
 
     public String backupState(String name) {
         String entriesJson = GSON.toJson(entries);
-        int er = writeToFile(computeBackFilePath("entries_" + name), entriesJson);
+        int er = writeToFile(computeBackFilePath(name + "_entries"), entriesJson);
         if (er == 1) return "Erreur lors du backup..";
         else if (er == 2) return "Un backup portant le même nom existe déjà..";
         String scoresJson = GSON.toJson(scores);
-        er = writeToFile(computeBackFilePath("scores_" + name), scoresJson);
+        er = writeToFile(computeBackFilePath(name + "_scores"), scoresJson);
         if (er == 1) return "Erreur lors du backup..";
         else if (er == 2) return "Un backup portant le même nom existe déjà..";
         return "Backup réalisé avec succès !";
     }
 
     public String restoreState(String name) {
-        String entriesJson = readFile(computeBackFilePath("entries_" + name));
+        String entriesJson = readFile(computeBackFilePath(name + "_entries"));
         if (entriesJson.isEmpty()) return "Erreur lors de la restauration du backup..";
-        String scoresJson = readFile(computeBackFilePath("scores_" + name));
+        String scoresJson = readFile(computeBackFilePath(name + "_scores"));
         if (scoresJson.isEmpty()) return "Erreur lors de la restauration du backup..";
         try {
-            Type entriesType = new TypeToken<HashMap<String, LinkedHashSet<SongEntry>>>() {}.getType();
+            Type entriesType = new TypeToken<ConcurrentHashMap<String, LinkedHashSet<SongEntry>>>() {}.getType();
             this.entries = GSON.fromJson(entriesJson, entriesType);
             Type scoresType = new TypeToken<HashMap<String, Integer>>() {}.getType();
             this.scores = GSON.fromJson(scoresJson, scoresType);
