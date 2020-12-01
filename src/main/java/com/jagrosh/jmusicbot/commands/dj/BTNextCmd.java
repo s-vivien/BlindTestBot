@@ -83,9 +83,7 @@ public class BTNextCmd extends DJCommand {
             propositionListener.setOnPropositionLambda((author, prop) -> {
                 if (author.equalsIgnoreCase(songEntry.getOwner())) return null;
                 String reply = blindTest.onProposition(author, prop);
-                if (reply != null) {
-                    event.reply(reply);
-                }
+                if (reply != null) { event.reply(reply); }
                 return null;
             });
             int pos = handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor())) + 1;

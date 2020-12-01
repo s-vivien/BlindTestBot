@@ -74,7 +74,6 @@ public class BlindTest {
 
         if (artistFound == null) {
             int artistAlone = calculate(proposition, currentSongEntry.artist);
-            System.err.println("artistAlone " + artistAlone);
             if (artistAlone <= MAX_DIST) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);

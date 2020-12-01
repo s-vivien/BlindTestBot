@@ -93,17 +93,17 @@ public class JMusicBot {
                 .setLinkedCacheSize(200)
                 .setGuildSettingsManager(settings)
                 .addCommands(
-                        new BTBackupCmd(blindTest),
-                        new BTRestoreCmd(blindTest),
-                        new BTLockPoolCmd(blindTest),
-                        new BTPublicRulesCmd(blindTest),
-                        new BTPublicPoolCmd(blindTest),
-                        new BTPublicScoreboardCmd(blindTest),
                         new BTDMAddCmd(bot, blindTest),
                         new BTDMListCmd(bot, blindTest),
                         new BTDMSetTitleCmd(bot, blindTest),
                         new BTDMSetArtistCmd(bot, blindTest),
                         new BTDMRemoveCmd(bot, blindTest),
+                        new BTPublicRulesCmd(blindTest),
+                        new BTPublicPoolCmd(blindTest),
+                        new BTPublicScoreboardCmd(blindTest),
+                        new BTBackupCmd(blindTest),
+                        new BTRestoreCmd(blindTest),
+                        new BTLockPoolCmd(blindTest),
                         new BTNextCmd(bot, blindTest, propositionListener),
                         //                        new PingCommand(),
                         //                        new SettingsCmd(bot),
