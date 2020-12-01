@@ -42,7 +42,7 @@ public class BTDMAddCmd extends BTDMCommand {
         this.blindTest = blindTest;
         this.name = "add";
         this.arguments = "<Youtube URL>";
-        this.help = "adds song to the blindtest pool";
+        this.help = "adds song/playlist to the blindtest pool";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.guildOnly = false;
     }
@@ -50,7 +50,70 @@ public class BTDMAddCmd extends BTDMCommand {
     @Override
     protected void execute(CommandEvent commandEvent) {
         if (blindTest.getLock()) commandEvent.reply("Il n'est plus possible de changer les propositions");
-        else bot.getPlayerManager().loadItem(commandEvent.getArgs(), new BTDMAddCmd.ResultHandler(commandEvent));
+        else {
+            String url = commandEvent.getMessage().getContentRaw().substring("!add ".length()).trim();
+            if (url.startsWith("<") && url.endsWith(">")) url = url.substring(1, url.length() - 1);
+            bot.getPlayerManager().loadItem(url, new BTDMAddCmd.ResultHandler(commandEvent));
+        }
+    }
+
+    private class ResultHandler implements AudioLoadResultHandler {
+
+        private CommandEvent event;
+        private String author;
+
+        public ResultHandler(CommandEvent event) {
+            this.event = event;
+            this.author = event.getMessage().getAuthor().getName();
+        }
+
+        private void addSingleTrack(AudioTrack audioTrack) {
+            TrackInfo info = extractArtistAndTrack(audioTrack.getInfo().uri);
+            int addResult = blindTest.addSongRequest(author, audioTrack.getInfo().uri, info != null ? info.artist : "N/A", info != null ? info.track : "N/A");
+            String reply = "Ajout de **" + audioTrack.getInfo().title + "** ... ";
+            if (addResult == 1) reply += ":no_entry_sign: Cette chanson avait déjà été ajoutée";
+            else if (addResult == 2) reply += ":no_entry_sign: Il n'y a plus de place, nombre maximum de chansons atteint";
+            else reply += ":white_check_mark: Chanson ajoutée avec succès" + (info == null ? " (:rotating_light: probable erreur dans le titre/artiste)" : "");
+            event.reply(reply);
+        }
+
+        private void finalReply() {
+            event.reply(blindTest.getSongList(author));
+        }
+
+        @Override
+        public void trackLoaded(AudioTrack audioTrack) {
+            addSingleTrack(audioTrack);
+            finalReply();
+        }
+
+        @Override
+        public void playlistLoaded(AudioPlaylist audioPlaylist) {
+            for (AudioTrack audioTrack : audioPlaylist.getTracks()) {
+                addSingleTrack(audioTrack);
+            }
+            finalReply();
+        }
+
+        @Override
+        public void noMatches() {
+            event.reply("Mauvais paramètre..");
+        }
+
+        @Override
+        public void loadFailed(FriendlyException e) {
+            event.reply("Le chargement de la vidéo/playlist a échoué..");
+        }
+    }
+
+    private class TrackInfo {
+        String artist;
+        String track;
+
+        public TrackInfo(String artist, String track) {
+            this.artist = artist;
+            this.track = track;
+        }
     }
 
     private TrackInfo extractArtistAndTrack(String videoUrl) {
@@ -77,52 +140,6 @@ public class BTDMAddCmd extends BTDMCommand {
         }
 
         return null;
-    }
-
-    private class TrackInfo {
-        String artist;
-        String track;
-
-        public TrackInfo(String artist, String track) {
-            this.artist = artist;
-            this.track = track;
-        }
-    }
-
-    private class ResultHandler implements AudioLoadResultHandler {
-
-        private CommandEvent event;
-
-        public ResultHandler(CommandEvent event) {
-            this.event = event;
-        }
-
-        @Override
-        public void trackLoaded(AudioTrack audioTrack) {
-            String author = event.getMessage().getAuthor().getName();
-            String url = event.getMessage().getContentRaw().substring("!add ".length());
-            TrackInfo info = extractArtistAndTrack(url);
-            int addResult = blindTest.addSongRequest(author, url, info != null ? info.artist : "", info != null ? info.track : "");
-            if (addResult == 1) event.reply("Cette chanson avait déjà été ajoutée");
-            else if (addResult == 2) event.reply("Il n'y a plus de place, nombre maximum de chansons atteint");
-            else event.reply("Chanson ajoutée" + (info == null ? " (:rotating_light: probable erreur dans le titre/artiste)" : "") +
-                             ", les joueurs devront taper les valeurs entre crochets pour marquer les points. Pensez à vérifier qu'elles sont correctes.\n" + blindTest.getSongList(author));
-        }
-
-        @Override
-        public void playlistLoaded(AudioPlaylist audioPlaylist) {
-            event.reply("Je veux pas de playlist, uniquement des chansons..");
-        }
-
-        @Override
-        public void noMatches() {
-            event.reply("Mauvais paramètre..");
-        }
-
-        @Override
-        public void loadFailed(FriendlyException e) {
-            event.reply("Le chargement de la vidéo a échoué..");
-        }
     }
 
 }

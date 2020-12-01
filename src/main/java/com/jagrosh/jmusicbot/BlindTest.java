@@ -209,7 +209,7 @@ public class BlindTest {
     public String getSongList(String nick) {
         Set<SongEntry> entrySet = entries.get(nick);
         if (entrySet == null || entrySet.isEmpty()) return "Aucune chanson ajoutée pour l'instant";
-        String list = "Liste des chansons ajoutées :\n";
+        String list = "Liste des chansons ajoutées (les joueurs devront saisir les valeurs entre crochets pour marquer les points; pensez à vérifier qu'elles sont correctes) :\n";
         Iterator<SongEntry> it = entrySet.iterator();
         int i = 1;
         while (it.hasNext()) {
