@@ -19,10 +19,11 @@ import java.util.stream.Collectors;
 public class BlindTest {
 
     private Gson GSON = new Gson();
-    static final int SINGLE_SCORE = 1;
-    static final int COMBO_SCORE = 3;
-    static final int NOTFOUND_SCORE = -1;
-    static final int MAX_DIST = 2;
+    private static final String EMOJI = ":fire:";
+    private static final int SINGLE_SCORE = 1;
+    private static final int COMBO_SCORE = 3;
+    private static final int NOTFOUND_SCORE = -1;
+    private static final int MAX_DIST = 2;
 
     // State
     Map<String, LinkedHashSet<SongEntry>> entries = new HashMap<>();
@@ -58,15 +59,15 @@ public class BlindTest {
                 artistFound = author;
                 trackFound = author;
                 addScore(author, COMBO_SCORE);
-                return author + " a trouvé l'artiste et le titre ! (+" + COMBO_SCORE + ")";
+                return EMOJI + " " + author + " a trouvé l'artiste et le titre ! (+" + COMBO_SCORE + ") " + EMOJI;
             } else if (artistFound == null) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);
-                return author + " a trouvé l'artiste ! (+" + SINGLE_SCORE + ")";
+                return EMOJI + " " + author + " a trouvé l'artiste ! (+" + SINGLE_SCORE + ") " + EMOJI;
             } else if (trackFound == null) {
                 trackFound = author;
                 addScore(author, SINGLE_SCORE);
-                return author + " a trouvé le titre ! (+" + SINGLE_SCORE + ")";
+                return EMOJI + " " + author + " a trouvé le titre ! (+" + SINGLE_SCORE + ") " + EMOJI;
             }
         }
 
@@ -76,7 +77,7 @@ public class BlindTest {
             if (artistAlone <= MAX_DIST) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);
-                return author + " a trouvé l'artiste ! (+" + SINGLE_SCORE + ")";
+                return EMOJI + " " + author + " a trouvé l'artiste ! (+" + SINGLE_SCORE + ") " + EMOJI;
             }
         }
 
@@ -85,7 +86,7 @@ public class BlindTest {
             if (trackAlone <= MAX_DIST) {
                 trackFound = author;
                 addScore(author, SINGLE_SCORE);
-                return author + " a trouvé le titre ! (+" + SINGLE_SCORE + ")";
+                return EMOJI + " " + author + " a trouvé le titre ! (+" + SINGLE_SCORE + ") " + EMOJI;
             }
         }
 
