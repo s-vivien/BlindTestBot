@@ -15,7 +15,9 @@ public class PropositionListener implements CommandListener {
 
     @Override
     public void onNonCommandMessage(MessageReceivedEvent event) {
-        onPropositionLambda.apply(event.getAuthor().getName(), event.getMessage().getContentRaw());
+        if (onPropositionLambda != null) {
+            onPropositionLambda.apply(event.getAuthor().getName(), event.getMessage().getContentRaw());
+        }
     }
 
 }

@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 public class BlindTest {
 
     private Gson GSON = new Gson();
+    public static final String DEFAULT = "N/A";
     private static final String EMOJI = ":fire:";
     private static final int SINGLE_SCORE = 1;
     private static final int COMBO_SCORE = 3;
@@ -110,7 +111,10 @@ public class BlindTest {
         int total = 0;
 
         for (Map.Entry<String, LinkedHashSet<SongEntry>> e : entries.entrySet()) {
-            pool += e.getKey() + " : " + e.getValue().size() + "/" + songsPerPlayer + "\n";
+            int empty = 0;
+            for (SongEntry se : e.getValue()) if (se.title.equalsIgnoreCase(DEFAULT) || se.artist.equalsIgnoreCase(DEFAULT)) empty++;
+            String warning = (empty > 0 ? " (" + empty + " proposition" + (empty > 1 ? "s" : "") + " incomplète" + (empty > 1 ? "s" : "") + ")" : "");
+            pool += e.getKey() + " : " + e.getValue().size() + "/" + songsPerPlayer + warning + "\n";
             total += e.getValue().size();
         }
         pool += "**TOTAL** : " + total;

@@ -69,7 +69,7 @@ public class BTDMAddCmd extends BTDMCommand {
 
         private int addSingleTrack(AudioTrack audioTrack) {
             TrackInfo info = extractArtistAndTrack(audioTrack.getInfo().uri);
-            int addResult = blindTest.addSongRequest(author, audioTrack.getInfo().uri, info != null ? info.artist : "N/A", info != null ? info.track : "N/A");
+            int addResult = blindTest.addSongRequest(author, audioTrack.getInfo().uri, info != null ? info.artist : BlindTest.DEFAULT, info != null ? info.track : BlindTest.DEFAULT);
             String reply = "Ajout de **" + audioTrack.getInfo().title + "** ... ";
             if (addResult == 1) reply += ":no_entry_sign: Cette chanson avait déjà été ajoutée";
             else if (addResult == 2) reply += ":no_entry_sign: Il n'y a plus de place, nombre maximum de chansons atteint";

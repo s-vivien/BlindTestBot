@@ -1,3 +1,3 @@
-- Bloquer les soumissions de chansons quand le BT est démarré
-- Rendre le tout persisté (scores, pool de chansons, chansons déja jouées, etc) crash-proof
-- Remettre le SKIP
+- treshold distance Levenshtein proportionnel à la taille de la réponse
+- clean ponctuation plus aggressif
+- bloquer les propositions DM
