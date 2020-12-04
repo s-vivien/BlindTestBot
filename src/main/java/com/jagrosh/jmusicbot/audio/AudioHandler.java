@@ -62,10 +62,6 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler
         this.onTrackEndLambda = onTrackEndLambda;
     }
 
-    //    public void setBlindTest(BlindTest blindTest) {
-//        this.blindTest = blindTest;
-//    }
-
     protected AudioHandler(PlayerManager manager, Guild guild, AudioPlayer player)
     {
         this.manager = manager;
@@ -108,7 +104,6 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler
         queue.clear();
         defaultQueue.clear();
         audioPlayer.stopTrack();
-        //current = null;
     }
     
     public boolean isMusicPlaying(JDA jda)

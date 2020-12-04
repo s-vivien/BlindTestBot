@@ -1,2 +1,0 @@
-- treshold distance Levenshtein proportionnel à la taille de la réponse
-- clean ponctuation plus aggressif

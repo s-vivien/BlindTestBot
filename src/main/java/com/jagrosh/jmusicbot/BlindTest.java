@@ -11,6 +11,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.Normalizer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -322,11 +323,9 @@ public class BlindTest {
     }
 
     private String cleanLight(String title) {
-        return title
-                .replaceAll(",", "")
-                .replaceAll("!", "")
-                .replaceAll(",", "")
-                .replaceAll("\\?", "")
+        return Normalizer.normalize(title.toLowerCase(), Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+                .replaceAll("[,\\!\\?\\:;]", "")
                 .trim();
     }
 
@@ -366,10 +365,6 @@ public class BlindTest {
     private static int min(int... numbers) {
         return Arrays.stream(numbers)
                 .min().orElse(Integer.MAX_VALUE);
-    }
-
-    public static class SongTokens {
-
     }
 
     public static class SongEntry {
