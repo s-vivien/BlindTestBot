@@ -15,7 +15,7 @@ public class PropositionListener implements CommandListener {
 
     @Override
     public void onNonCommandMessage(MessageReceivedEvent event) {
-        if (onPropositionLambda != null) {
+        if (event.getMessage().isFromGuild() && onPropositionLambda != null) {
             onPropositionLambda.apply(event.getAuthor().getName(), event.getMessage().getContentRaw());
         }
     }

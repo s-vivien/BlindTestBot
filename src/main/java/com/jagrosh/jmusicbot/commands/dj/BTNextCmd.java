@@ -51,20 +51,17 @@ public class BTNextCmd extends DJCommand {
 
     @Override
     public void doCommand(CommandEvent commandEvent) {
-        if (DJCommand.checkDJPermission(commandEvent)) {
-
-            AudioHandler handler = (AudioHandler) commandEvent.getGuild().getAudioManager().getSendingHandler();
-            if (handler.getPlayer().getPlayingTrack() != null) {
-                commandEvent.reply("La chanson précédente n'est pas terminée :upside_down:");
-                return;
-            }
-            if (!blindTest.pickRandomNextSong()) {
-                commandEvent.reply("Toutes les chansons ont été jouées :tired_face:");
-                return;
-            }
-
-            bot.getPlayerManager().loadItem(blindTest.getCurrentSongEntry().getUrl(), new BTNextCmd.ResultHandler(commandEvent));
+        AudioHandler handler = (AudioHandler) commandEvent.getGuild().getAudioManager().getSendingHandler();
+        if (handler.getPlayer().getPlayingTrack() != null) {
+            commandEvent.reply("La chanson précédente n'est pas terminée :upside_down:");
+            return;
         }
+        if (!blindTest.pickRandomNextSong()) {
+            commandEvent.reply("Toutes les chansons ont été jouées :tired_face:");
+            return;
+        }
+
+        bot.getPlayerManager().loadItem(blindTest.getCurrentSongEntry().getUrl(), new BTNextCmd.ResultHandler(commandEvent));
     }
 
     private class ResultHandler implements AudioLoadResultHandler {
@@ -79,14 +76,23 @@ public class BTNextCmd extends DJCommand {
         public void trackLoaded(AudioTrack audioTrack) {
             BlindTest.SongEntry songEntry = blindTest.getCurrentSongEntry();
             AudioHandler handler = (AudioHandler) event.getGuild().getAudioManager().getSendingHandler();
-            handler.setOnTrackEndLambda(() -> event.reply(blindTest.onTrackEnd()));
+            handler.setOnTrackEndLambda(() -> {
+                event.reply(blindTest.onTrackEnd());
+                propositionListener.setOnPropositionLambda(null);
+            });
             propositionListener.setOnPropositionLambda((author, prop) -> {
                 if (author.equalsIgnoreCase(songEntry.getOwner())) return null;
                 String reply = blindTest.onProposition(author, prop);
-                if (reply != null) { event.reply(reply); }
+                if (reply != null) {
+                    event.reply(reply);
+                    //                    if (blindTest.everyAnswerFound()) {
+                    //                        handler.stopAndClear();
+                    //                        event.getGuild().getAudioManager().closeAudioConnection();
+                    //                    }
+                }
                 return null;
             });
-            int pos = handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor())) + 1;
+            handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor()));
             event.reply("\uD83D\uDEA8 Chanson proposée par **" + songEntry.getOwner() + "** qui ne pourra pas jouer durant ce tour \uD83D\uDEA8");
         }
 

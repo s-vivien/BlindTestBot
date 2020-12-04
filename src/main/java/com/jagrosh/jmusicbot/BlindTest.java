@@ -25,7 +25,8 @@ public class BlindTest {
     private static final int SINGLE_SCORE = 1;
     private static final int COMBO_SCORE = 3;
     private static final int NOTFOUND_SCORE = -1;
-    private static final int MAX_DIST = 2;
+    private static final int MAX_DIST_RATIO = 6;
+    private static final int MAX_DIST_OFFSET = 3;
 
     // State
     ConcurrentHashMap<String, LinkedHashSet<SongEntry>> entries = new ConcurrentHashMap<>();
@@ -37,6 +38,7 @@ public class BlindTest {
     // Current song
     SongEntry currentSongEntry = null;
     String trackFound, artistFound;
+    int maxDistCombo, maxDistArtist, maxDistTitle;
 
     public BlindTest(BotConfig cfg) {
         songsPerPlayer = cfg.getSongsPerPlayer();
@@ -56,7 +58,7 @@ public class BlindTest {
         proposition = proposition.toLowerCase();
 
         int combo = Math.min(calculate(proposition, currentSongEntry.artist + " " + currentSongEntry.title), calculate(proposition, currentSongEntry.title + " " + currentSongEntry.artist));
-        if (combo <= MAX_DIST) {
+        if (combo <= maxDistCombo) {
             if (artistFound == null && trackFound == null) {
                 artistFound = author;
                 trackFound = author;
@@ -75,7 +77,7 @@ public class BlindTest {
 
         if (artistFound == null) {
             int artistAlone = calculate(proposition, currentSongEntry.artist);
-            if (artistAlone <= MAX_DIST) {
+            if (artistAlone <= maxDistArtist) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);
                 return EMOJI + " " + author + " a trouvé l'artiste ! (+" + SINGLE_SCORE + ") " + EMOJI;
@@ -84,7 +86,7 @@ public class BlindTest {
 
         if (trackFound == null) {
             int trackAlone = calculate(proposition, currentSongEntry.title);
-            if (trackAlone <= MAX_DIST) {
+            if (trackAlone <= maxDistTitle) {
                 trackFound = author;
                 addScore(author, SINGLE_SCORE);
                 return EMOJI + " " + author + " a trouvé le titre ! (+" + SINGLE_SCORE + ") " + EMOJI;
@@ -102,6 +104,9 @@ public class BlindTest {
         clearCurrentSong();
         currentSongEntry = entryList.get(0);
         currentSongEntry.done = true;
+        maxDistCombo = Math.max(0, (currentSongEntry.artist.length() + currentSongEntry.title.length() + 1) - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
+        maxDistArtist = Math.max(0, currentSongEntry.artist.length() - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
+        maxDistTitle = Math.max(0, currentSongEntry.title.length() - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
         return true;
     }
 
@@ -198,6 +203,10 @@ public class BlindTest {
             i++;
         }
         return 1;
+    }
+
+    public boolean everyAnswerFound() {
+        return currentSongEntry != null && trackFound != null && artistFound != null;
     }
 
     public String onTrackEnd() {
@@ -313,7 +322,12 @@ public class BlindTest {
     }
 
     private String cleanLight(String title) {
-        return title.replaceAll(",", "");
+        return title
+                .replaceAll(",", "")
+                .replaceAll("!", "")
+                .replaceAll(",", "")
+                .replaceAll("\\?", "")
+                .trim();
     }
 
     private String cleanTitle(String title) {
@@ -352,6 +366,10 @@ public class BlindTest {
     private static int min(int... numbers) {
         return Arrays.stream(numbers)
                 .min().orElse(Integer.MAX_VALUE);
+    }
+
+    public static class SongTokens {
+
     }
 
     public static class SongEntry {
