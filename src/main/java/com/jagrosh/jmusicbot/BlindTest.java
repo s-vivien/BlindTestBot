@@ -24,22 +24,23 @@ public class BlindTest {
     public static final String DEFAULT = "N/A";
     private static final String EMOJI = ":fire:";
     private static final int SINGLE_SCORE = 1;
+    private static final String SUCCESS_REPLY_TEMPLATE = EMOJI + " %s a trouvé %s `[%s]` ! (+%d) " + EMOJI;
     private static final int COMBO_SCORE = 3;
     private static final int NOTFOUND_SCORE = -1;
     private static final int MAX_DIST_RATIO = 6;
     private static final int MAX_DIST_OFFSET = 3;
 
     // State
-    ConcurrentHashMap<String, LinkedHashSet<SongEntry>> entries = new ConcurrentHashMap<>();
-    Map<String, Integer> scores = new HashMap<>();
-    boolean locked = false;
-    Integer songsPerPlayer;
-    String backupPath;
+    private ConcurrentHashMap<String, LinkedHashSet<SongEntry>> entries = new ConcurrentHashMap<>();
+    private Map<String, Integer> scores = new HashMap<>();
+    private boolean locked = false;
+    private Integer songsPerPlayer;
+    private String backupPath;
 
     // Current song
-    SongEntry currentSongEntry = null;
-    String trackFound, artistFound;
-    int maxDistCombo, maxDistArtist, maxDistTitle;
+    private SongEntry currentSongEntry = null;
+    private String trackFound, artistFound;
+    private int maxDistCombo, maxDistArtist, maxDistTitle;
 
     public BlindTest(BotConfig cfg) {
         songsPerPlayer = cfg.getSongsPerPlayer();
@@ -64,15 +65,15 @@ public class BlindTest {
                 artistFound = author;
                 trackFound = author;
                 addScore(author, COMBO_SCORE);
-                return EMOJI + " " + author + " a trouvé l'artiste et le titre ! (+" + COMBO_SCORE + ") " + EMOJI;
+                return String.format(SUCCESS_REPLY_TEMPLATE, author, "l'artiste et le titre", currentSongEntry.artist + "][" + currentSongEntry.title, COMBO_SCORE);
             } else if (artistFound == null) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);
-                return EMOJI + " " + author + " a trouvé l'artiste ! (+" + SINGLE_SCORE + ") " + EMOJI;
+                return String.format(SUCCESS_REPLY_TEMPLATE, author, "l'artiste", currentSongEntry.artist, SINGLE_SCORE);
             } else if (trackFound == null) {
                 trackFound = author;
                 addScore(author, SINGLE_SCORE);
-                return EMOJI + " " + author + " a trouvé le titre ! (+" + SINGLE_SCORE + ") " + EMOJI;
+                return String.format(SUCCESS_REPLY_TEMPLATE, author, "le titre", currentSongEntry.title, SINGLE_SCORE);
             }
         }
 
@@ -81,7 +82,7 @@ public class BlindTest {
             if (artistAlone <= maxDistArtist) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);
-                return EMOJI + " " + author + " a trouvé l'artiste ! (+" + SINGLE_SCORE + ") " + EMOJI;
+                return String.format(SUCCESS_REPLY_TEMPLATE, author, "l'artiste", currentSongEntry.artist, SINGLE_SCORE);
             }
         }
 
@@ -90,7 +91,7 @@ public class BlindTest {
             if (trackAlone <= maxDistTitle) {
                 trackFound = author;
                 addScore(author, SINGLE_SCORE);
-                return EMOJI + " " + author + " a trouvé le titre ! (+" + SINGLE_SCORE + ") " + EMOJI;
+                return String.format(SUCCESS_REPLY_TEMPLATE, author, "le titre", currentSongEntry.title, SINGLE_SCORE);
             }
         }
 
@@ -173,37 +174,19 @@ public class BlindTest {
     }
 
     public int updateArtist(String author, Integer index, String artist) {
-        LinkedHashSet<SongEntry> entrySet = entries.get(author);
-        if (entrySet == null || entrySet.isEmpty() || entrySet.size() < index) return 1;
-        Iterator<SongEntry> it = entrySet.iterator();
-        int i = 1;
-        while (it.hasNext()) {
-            SongEntry e = it.next();
-            if (i == index) {
-                e.artist = cleanLight(artist.toLowerCase());
-                e.recomputeOriginalTitle();
-                return 0;
-            }
-            i++;
-        }
-        return 1;
+        SongEntry e = getEntryByIndex(author, index);
+        if (e == null) return 1;
+        e.artist = cleanLight(artist.toLowerCase());
+        e.recomputeOriginalTitle();
+        return 0;
     }
 
     public int updateTitle(String author, Integer index, String title) {
-        LinkedHashSet<SongEntry> entrySet = entries.get(author);
-        if (entrySet == null || entrySet.isEmpty() || entrySet.size() < index) return 1;
-        Iterator<SongEntry> it = entrySet.iterator();
-        int i = 1;
-        while (it.hasNext()) {
-            SongEntry e = it.next();
-            if (i == index) {
-                e.title = cleanTitle(title.toLowerCase());
-                e.recomputeOriginalTitle();
-                return 0;
-            }
-            i++;
-        }
-        return 1;
+        SongEntry e = getEntryByIndex(author, index);
+        if (e == null) return 1;
+        e.title = cleanTitle(title.toLowerCase());
+        e.recomputeOriginalTitle();
+        return 0;
     }
 
     public boolean everyAnswerFound() {
@@ -223,7 +206,7 @@ public class BlindTest {
     public String getSongList(String nick) {
         Set<SongEntry> entrySet = entries.get(nick);
         if (entrySet == null || entrySet.isEmpty()) return "Aucune chanson ajoutée pour l'instant";
-        String list = "Liste des chansons ajoutées (les joueurs devront saisir les valeurs entre crochets pour marquer les points; pensez à vérifier qu'elles sont correctes) :\n";
+        String list = "Liste des chansons ajoutées (les joueurs devront saisir les valeurs entre crochets pour marquer les points, pensez à vérifier qu'elles sont correctes) :\n";
         Iterator<SongEntry> it = entrySet.iterator();
         int i = 1;
         while (it.hasNext()) {
@@ -316,6 +299,21 @@ public class BlindTest {
         return "Restauration réalisée avec succès !";
     }
 
+    private SongEntry getEntryByIndex(String author, Integer index) {
+        LinkedHashSet<SongEntry> entrySet = entries.get(author);
+        if (entrySet == null || entrySet.isEmpty() || entrySet.size() < index) return null;
+        Iterator<SongEntry> it = entrySet.iterator();
+        int i = 1;
+        while (it.hasNext()) {
+            SongEntry e = it.next();
+            if (i == index) {
+                return e;
+            }
+            i++;
+        }
+        return null;
+    }
+
     private List<SongEntry> getFlatEntries() {
         List<SongEntry> entryList = new ArrayList<>();
         entries.entrySet().forEach(e -> entryList.addAll(e.getValue()));
@@ -374,11 +372,6 @@ public class BlindTest {
         String title;
         String completeOriginalTitle;
         boolean done = false;
-
-        public SongEntry(String url, String owner) {
-            this.url = url;
-            this.owner = owner;
-        }
 
         public SongEntry(String url, String owner, String artist, String title, String completeOriginalTitle) {
             this.url = url;

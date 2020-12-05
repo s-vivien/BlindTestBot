@@ -16,6 +16,7 @@
 package com.jagrosh.jmusicbot.commands;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
+import com.jagrosh.jmusicbot.BlindTest;
 import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.settings.Settings;
 import net.dv8tion.jda.api.Permission;
@@ -31,6 +32,12 @@ public abstract class DJCommand extends MusicCommand
     {
         super(bot);
         this.category = new Category("DJ", event -> checkDJPermission(event));
+    }
+
+    public DJCommand(Bot bot, BlindTest blindTest)
+    {
+        super(bot);
+        this.category = new Category("DJ", event -> checkDJPermission(event) || (blindTest.getCurrentSongEntry() != null && event.getAuthor().getName().equals(blindTest.getCurrentSongEntry().getOwner())));
     }
     
     public static boolean checkDJPermission(CommandEvent event)
