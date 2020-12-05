@@ -27,6 +27,6 @@ public abstract class BTDMCommand extends Command {
 
     public BTDMCommand(Bot bot) {
         this.bot = bot;
-        this.category = new Category("Blind-Test DM");
+        this.category = new Category("Blind-Test DM", event -> !event.getMessage().isFromGuild());
     }
 }
