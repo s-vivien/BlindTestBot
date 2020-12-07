@@ -126,8 +126,8 @@ public class JMusicBot {
                         //                        new PlaynextCmd(bot),
                         //                        new RepeatCmd(bot),
                         //                        new SkiptoCmd(bot),
-                        new StopCmd(bot, blindTest),
-                        new VolumeCmd(bot)
+                        new VolumeCmd(bot),
+                        new StopCmd(bot, blindTest)
                         //                        new PrefixCmd(bot),
                         //                        new SetdjCmd(bot),
                         //                        new SettcCmd(bot),
