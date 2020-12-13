@@ -136,8 +136,7 @@ public class BTDMAddCmd extends BTDMCommand {
             String track = root.get("track").getAsString();
             String artist = root.get("artist").getAsString();
             return new TrackInfo(artist, track);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ignored) {
         }
 
         return null;
