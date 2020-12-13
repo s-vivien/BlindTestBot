@@ -29,27 +29,27 @@ import net.dv8tion.jda.api.exceptions.PermissionException;
  *
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public abstract class MusicCommand extends Command 
+public abstract class MusicCommand extends Command
 {
     protected final Bot bot;
     protected boolean bePlaying;
     protected boolean beListening;
-    
+
     public MusicCommand(Bot bot)
     {
         this.bot = bot;
         this.guildOnly = true;
         this.category = new Category("Music");
     }
-    
+
     @Override
-    protected void execute(CommandEvent event) 
+    protected void execute(CommandEvent event)
     {
         Settings settings = event.getClient().getSettingsFor(event.getGuild());
         TextChannel tchannel = settings.getTextChannel(event.getGuild());
         if(tchannel!=null && !event.getTextChannel().equals(tchannel))
         {
-            try 
+            try
             {
                 event.getMessage().delete().queue();
             } catch(PermissionException ignore){}
@@ -83,20 +83,20 @@ public abstract class MusicCommand extends Command
 
             if(!event.getGuild().getSelfMember().getVoiceState().inVoiceChannel())
             {
-                try 
+                try
                 {
                     event.getGuild().getAudioManager().openAudioConnection(userState.getChannel());
                 }
-                catch(PermissionException ex) 
+                catch(PermissionException ex)
                 {
                     event.reply(event.getClient().getError()+" I am unable to connect to **"+userState.getChannel().getName()+"**!");
                     return;
                 }
             }
         }
-        
+
         doCommand(event);
     }
-    
+
     public abstract void doCommand(CommandEvent event);
 }

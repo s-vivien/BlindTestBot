@@ -34,6 +34,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.jagrosh.jmusicbot.commands.CustomCommandClientBuilder;
 
 import javax.security.auth.login.LoginException;
 import java.util.Arrays;
@@ -83,7 +84,8 @@ public class JMusicBot {
         PropositionListener propositionListener = new PropositionListener();
 
         // set up the command client
-        CommandClientBuilder cb = new CommandClientBuilder()
+        CommandClientBuilder cb = new CustomCommandClientBuilder()
+                .setBlindTestChannel(config.getBlindTestChannel())
                 .setPrefix(config.getPrefix())
                 .setListener(propositionListener)
                 .setAlternativePrefix(config.getAltPrefix())

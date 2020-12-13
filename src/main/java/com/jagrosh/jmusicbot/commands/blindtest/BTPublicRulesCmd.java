@@ -46,7 +46,7 @@ public class BTPublicRulesCmd extends BTPublicCommand {
                        "* 1 point est donné à la première personne qui trouve le titre, 1 point pour l'artiste, et 3 points si les deux sont donnés en même temps (et qu'aucun des deux n'avait été trouvé au préalable)\n" +
                        "* Si personne ne trouve ni l'artiste ni le titre, 1 point est retiré à la personne qui a proposé la chanson\n" +
                        "\n" +
-                       "*Pour obtenir la liste des commandes disponibles, taper `!help`*";
+                       "*Pour obtenir la liste des commandes disponibles, taper `!bthelp`*";
         commandEvent.reply(rules);
     }
 }

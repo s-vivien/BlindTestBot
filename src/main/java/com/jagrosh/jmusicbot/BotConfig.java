@@ -40,7 +40,7 @@ public class BotConfig {
 
     private Path path = null;
     private String token, prefix, altprefix, helpWord, playlistsFolder,
-            successEmoji, warningEmoji, errorEmoji, loadingEmoji, searchingEmoji, backupPath;
+            successEmoji, warningEmoji, errorEmoji, loadingEmoji, searchingEmoji, backupPath, blindTestChannel;
     private boolean stayInChannel, songInGame, npImages, updatealerts, useEval, dbots;
     private long owner, maxSeconds;
     private int songsPerPlayer;
@@ -72,6 +72,7 @@ public class BotConfig {
             //            Config config = ConfigFactory.load();
 
             // set values
+            blindTestChannel = config.getString("blindTestChannel");
             backupPath = config.getString("backupPath");
             token = config.getString("token");
             prefix = config.getString("prefix");
@@ -260,6 +261,10 @@ public class BotConfig {
 
     public String getBackupPath() {
         return backupPath;
+    }
+
+    public String getBlindTestChannel() {
+        return blindTestChannel;
     }
 
     public boolean isTooLong(AudioTrack track) {
