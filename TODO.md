@@ -1,3 +1,1 @@
-- clear pool cmd
-- add/remove point cmd
 - check for PEGI18 videos at add step

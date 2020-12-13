@@ -34,6 +34,7 @@ public class BlindTest {
     private ConcurrentHashMap<String, LinkedHashSet<SongEntry>> entries = new ConcurrentHashMap<>();
     private Map<String, Integer> scores = new HashMap<>();
     private boolean locked = false;
+
     private Integer songsPerPlayer;
     private String backupPath;
 
@@ -96,6 +97,10 @@ public class BlindTest {
         }
 
         return null;
+    }
+
+    public void setSongsPerPlayer(Integer songsPerPlayer) {
+        this.songsPerPlayer = songsPerPlayer;
     }
 
     public boolean pickRandomNextSong() {
@@ -234,11 +239,16 @@ public class BlindTest {
         return locked;
     }
 
-    private void addScore(String nick, int score) {
+    public boolean isKnownNick(String nick) {
+        return scores.get(nick) != null;
+    }
+
+    public int addScore(String nick, int score) {
         Integer previousScore = scores.get(nick);
         if (previousScore == null) previousScore = 0;
         previousScore += score;
         scores.put(nick, previousScore);
+        return previousScore;
     }
 
     private int writeToFile(String path, String content) {
@@ -269,6 +279,12 @@ public class BlindTest {
 
     private String computeBackFilePath(String name) {
         return backupPath + File.separator + name + ".json";
+    }
+
+    public void reset() {
+        clearCurrentSong();
+        entries.clear();
+        scores.clear();
     }
 
     public String backupState(String name) {

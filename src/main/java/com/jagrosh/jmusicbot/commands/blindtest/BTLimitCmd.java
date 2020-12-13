@@ -18,25 +18,30 @@ package com.jagrosh.jmusicbot.commands.blindtest;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTDJCommand;
-import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTLockPoolCmd extends BTDJCommand {
+public class BTLimitCmd extends BTDJCommand {
 
     private BlindTest blindTest;
 
-    public BTLockPoolCmd(BlindTest blindTest) {
+    public BTLimitCmd(BlindTest blindTest) {
         this.blindTest = blindTest;
-        this.name = "lock";
-        this.help = "lock/unlock the submissions";
+        this.name = "limit";
+        this.arguments = "<maximum number of songs per player>";
+        this.help = "updates the song limit for players";
         this.guildOnly = true;
     }
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        boolean lock = blindTest.swapLock();
-        commandEvent.reply("Les propositions de chansons sont désormais **" + (lock ? "FERMEES :lock:" : "OUVERTES :unlock:") + "**");
+        try {
+            Integer limit = Integer.valueOf(commandEvent.getArgs());
+            blindTest.setSongsPerPlayer(limit);
+            commandEvent.reply("Les joueurs sont désormais limités à " + limit + " proposition" + (limit > 1 ? "s" : ""));
+        } catch (Exception e) {
+            commandEvent.reply("Paramètres incorrects, les arguments attendus sont " + arguments);
+        }
     }
 }

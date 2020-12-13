@@ -18,25 +18,24 @@ package com.jagrosh.jmusicbot.commands.blindtest;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTDJCommand;
-import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTLockPoolCmd extends BTDJCommand {
+public class BTResetCmd extends BTDJCommand {
 
     private BlindTest blindTest;
 
-    public BTLockPoolCmd(BlindTest blindTest) {
+    public BTResetCmd(BlindTest blindTest) {
         this.blindTest = blindTest;
-        this.name = "lock";
-        this.help = "lock/unlock the submissions";
+        this.name = "reset";
+        this.help = "resets the whole state of the blind-test";
         this.guildOnly = true;
     }
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        boolean lock = blindTest.swapLock();
-        commandEvent.reply("Les propositions de chansons sont désormais **" + (lock ? "FERMEES :lock:" : "OUVERTES :unlock:") + "**");
+        blindTest.reset();
+        commandEvent.reply(":recycle: Reset effectué avec succès !");
     }
 }

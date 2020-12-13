@@ -18,25 +18,37 @@ package com.jagrosh.jmusicbot.commands.blindtest;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTDJCommand;
-import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTLockPoolCmd extends BTDJCommand {
+public class BTAddPointCmd extends BTDJCommand {
 
     private BlindTest blindTest;
 
-    public BTLockPoolCmd(BlindTest blindTest) {
+    public BTAddPointCmd(BlindTest blindTest) {
         this.blindTest = blindTest;
-        this.name = "lock";
-        this.help = "lock/unlock the submissions";
+        this.name = "addpoint";
+        this.arguments = "<nick> <points>";
+        this.help = "adds points to some user's score";
         this.guildOnly = true;
     }
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        boolean lock = blindTest.swapLock();
-        commandEvent.reply("Les propositions de chansons sont désormais **" + (lock ? "FERMEES :lock:" : "OUVERTES :unlock:") + "**");
+        String[] spl = commandEvent.getArgs().split(" ");
+
+        try {
+            String nick = spl[0];
+            Integer pts = Integer.valueOf(spl[1]);
+            if (blindTest.isKnownNick(nick)) {
+                int score = blindTest.addScore(nick, pts);
+                commandEvent.reply(pts + " ajouté" + ((pts > 1 || pts < -1) ? "s" : "") + " à " + nick + ", qui a désormais " + score);
+            } else {
+                commandEvent.reply("Joueur inconnu..");
+            }
+        } catch (Exception e) {
+            commandEvent.reply("Paramètres incorrects, les arguments attendus sont " + arguments);
+        }
     }
 }
