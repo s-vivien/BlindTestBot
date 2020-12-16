@@ -1,7 +1,9 @@
-package com.jagrosh.jmusicbot;
+package com.jagrosh.jmusicbot.blindtest;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
+import com.jagrosh.jmusicbot.BotConfig;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -130,7 +132,6 @@ public class BlindTest {
             total += e.getValue().size();
         }
         pool += "**TOTAL** : " + total;
-
         return pool;
     }
 
@@ -251,28 +252,24 @@ public class BlindTest {
         return previousScore;
     }
 
-    private int writeToFile(String path, String content) {
+    private void writeToFile(String path, String content) throws IOException {
         Path p = Paths.get(path);
-        if (p.toFile().exists()) return 2;
+        if (p.toFile().exists()) throw new IllegalStateException();
         try (BufferedWriter writer = Files.newBufferedWriter(p)) {
             writer.write(content);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return 1;
         }
-        return 0;
     }
 
-    private String readFile(String path) {
+    private String readFile(String path) throws IOException {
         Path p = Paths.get(path);
-        String content = "";
+        if (!p.toFile().exists()) throw new IllegalStateException();
+        String content;
         try (BufferedReader reader = Files.newBufferedReader(p)) {
             String line;
+            content = "";
             while ((line = reader.readLine()) != null) {
                 content += line + System.lineSeparator();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         return content;
     }
@@ -289,28 +286,30 @@ public class BlindTest {
 
     public String backupState(String name) {
         String entriesJson = GSON.toJson(entries);
-        int er = writeToFile(computeBackFilePath(name + "_entries"), entriesJson);
-        if (er == 1) return "Erreur lors du backup..";
-        else if (er == 2) return "Un backup portant le même nom existe déjà..";
         String scoresJson = GSON.toJson(scores);
-        er = writeToFile(computeBackFilePath(name + "_scores"), scoresJson);
-        if (er == 1) return "Erreur lors du backup..";
-        else if (er == 2) return "Un backup portant le même nom existe déjà..";
+        try {
+            writeToFile(computeBackFilePath(name + "_entries"), entriesJson);
+            writeToFile(computeBackFilePath(name + "_scores"), scoresJson);
+        } catch (IllegalStateException e) {
+            return "Un backup portant le même nom existe déjà..";
+        } catch (IOException e) {
+            return "Erreur lors du backup..";
+        }
         return "Backup réalisé avec succès !";
     }
 
     public String restoreState(String name) {
-        String entriesJson = readFile(computeBackFilePath(name + "_entries"));
-        if (entriesJson.isEmpty()) return "Erreur lors de la restauration du backup..";
-        String scoresJson = readFile(computeBackFilePath(name + "_scores"));
-        if (scoresJson.isEmpty()) return "Erreur lors de la restauration du backup..";
         try {
+            String entriesJson = readFile(computeBackFilePath(name + "_entries"));
+            String scoresJson = readFile(computeBackFilePath(name + "_scores"));
             Type entriesType = new TypeToken<ConcurrentHashMap<String, LinkedHashSet<SongEntry>>>() {}.getType();
             this.entries = GSON.fromJson(entriesJson, entriesType);
             Type scoresType = new TypeToken<HashMap<String, Integer>>() {}.getType();
             this.scores = GSON.fromJson(scoresJson, scoresType);
-        } catch (Exception e) {
-            return "Erreur lors de la restauration du backup.."; // lol duplicated strings go brr brr
+        } catch (IllegalStateException e) {
+            return "Aucun fichier de backup portant ce nom n'a été trouvé..";
+        } catch (JsonParseException | IOException e) {
+            return "Erreur lors de la restauration du backup..";
         }
         return "Restauration réalisée avec succès !";
     }
