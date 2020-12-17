@@ -23,8 +23,11 @@ Blind-Test public:
 `!pool` - prints the song pool   
 `!scores` - prints the scoreboard   
 
-Blind-TestDJ:   
+Blind-Test DJ:   
+`!reset` - resets the whole state of the blind-test   
+`!limit <maximum number of songs per player>` - updates the song limit for players   
 `!backup <Backup name>` - backups the state of the game   
+`!addpoint <nick> <points>` - adds points to some user's score   
 `!restore <Backup name>` - restores the state of the game from a named backup   
 `!lock` - lock/unlock the submissions   
 

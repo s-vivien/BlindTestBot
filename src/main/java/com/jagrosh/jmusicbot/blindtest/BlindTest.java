@@ -62,7 +62,7 @@ public class BlindTest {
 
         proposition = proposition.toLowerCase();
 
-        int combo = Math.min(calculate(proposition, currentSongEntry.artist + " " + currentSongEntry.title), calculate(proposition, currentSongEntry.title + " " + currentSongEntry.artist));
+        int combo = Math.min(calculateDistance(proposition, currentSongEntry.artist + " " + currentSongEntry.title), calculateDistance(proposition, currentSongEntry.title + " " + currentSongEntry.artist));
         if (combo <= maxDistCombo) {
             if (artistFound == null && trackFound == null) {
                 artistFound = author;
@@ -81,7 +81,7 @@ public class BlindTest {
         }
 
         if (artistFound == null) {
-            int artistAlone = calculate(proposition, currentSongEntry.artist);
+            int artistAlone = calculateDistance(proposition, currentSongEntry.artist);
             if (artistAlone <= maxDistArtist) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);
@@ -90,7 +90,7 @@ public class BlindTest {
         }
 
         if (trackFound == null) {
-            int trackAlone = calculate(proposition, currentSongEntry.title);
+            int trackAlone = calculateDistance(proposition, currentSongEntry.title);
             if (trackAlone <= maxDistTitle) {
                 trackFound = author;
                 addScore(author, SINGLE_SCORE);
@@ -338,7 +338,7 @@ public class BlindTest {
     private String cleanLight(String title) {
         return Normalizer.normalize(title.toLowerCase(), Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
-                .replaceAll("[,\\!\\?\\:;]", "")
+                .replaceAll("[,\\!\\?\\:;\\.]", "")
                 .trim();
     }
 
@@ -350,34 +350,35 @@ public class BlindTest {
         return matchFound ? matcher.group(1).trim() : title.trim();
     }
 
-    private int calculate(String x, String y) {
-        int[][] dp = new int[x.length() + 1][y.length() + 1];
+    private int calculateDistance(String source, String target) {
+        int sourceLength = source.length();
+        int targetLength = target.length();
+        if (sourceLength == 0) return targetLength;
+        if (targetLength == 0) return sourceLength;
+        int[][] dist = new int[sourceLength + 1][targetLength + 1];
+        for (int i = 0; i < sourceLength + 1; i++) {
+            dist[i][0] = i;
+        }
+        for (int j = 0; j < targetLength + 1; j++) {
+            dist[0][j] = j;
+        }
+        for (int i = 1; i < sourceLength + 1; i++) {
+            for (int j = 1; j < targetLength + 1; j++) {
+                int cost = source.charAt(i - 1) == target.charAt(j - 1) ? 0 : 1;
 
-        for (int i = 0; i <= x.length(); i++) {
-            for (int j = 0; j <= y.length(); j++) {
-                if (i == 0) {
-                    dp[i][j] = j;
-                } else if (j == 0) {
-                    dp[i][j] = i;
-                } else {
-                    dp[i][j] = min(dp[i - 1][j - 1]
-                                   + costOfSubstitution(x.charAt(i - 1), y.charAt(j - 1)),
-                            dp[i - 1][j] + 1,
-                            dp[i][j - 1] + 1);
+                // special cases
+                if (source.charAt(i - 1) == ' ' && (target.charAt(j - 1) == '-' || target.charAt(j - 1) == '\'')) cost = 0;
+
+                dist[i][j] = Math.min(Math.min(dist[i - 1][j] + 1, dist[i][j - 1] + 1), dist[i - 1][j - 1] + cost);
+                if (i > 1 &&
+                    j > 1 &&
+                    source.charAt(i - 1) == target.charAt(j - 2) &&
+                    source.charAt(i - 2) == target.charAt(j - 1)) {
+                    dist[i][j] = Math.min(dist[i][j], dist[i - 2][j - 2] + cost);
                 }
             }
         }
-
-        return dp[x.length()][y.length()];
-    }
-
-    private static int costOfSubstitution(char a, char b) {
-        return a == b ? 0 : 1;
-    }
-
-    private static int min(int... numbers) {
-        return Arrays.stream(numbers)
-                .min().orElse(Integer.MAX_VALUE);
+        return dist[sourceLength][targetLength];
     }
 
     public static class SongEntry {
