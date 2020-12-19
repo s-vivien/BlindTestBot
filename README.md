@@ -1,4 +1,4 @@
-### 🎶 A poorly written blind-test bot based on https://github.com/jagrosh/MusicBot
+### 🎶 A poorly written blind-test bot powered by https://github.com/jagrosh/MusicBot
 A collaborative blind-test Discord bot.
 
 Everyone gives suggestions to the bot in DM, songs are added in a common pool. Every song is then picked randomly from the pool (the author of the suggestion cannot play).
