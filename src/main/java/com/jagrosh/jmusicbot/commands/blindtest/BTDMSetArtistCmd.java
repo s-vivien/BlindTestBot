@@ -20,6 +20,8 @@ import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.commands.BTDMCommand;
 
+import java.util.List;
+
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
@@ -47,7 +49,11 @@ public class BTDMSetArtistCmd extends BTDMCommand {
             String artist = spl[1];
             int updateResult = blindTest.updateArtist(author, idx, artist);
             if (updateResult == 1) commandEvent.reply("Aucune chanson ne correspond à cet index");
-            else commandEvent.reply("Artiste mis à jour avec succès\n" + blindTest.getSongList(author));
+            else commandEvent.reply("Artiste mis à jour avec succès");
+            List<String> lists = blindTest.getSongList(author);
+            for (String list : lists) {
+                commandEvent.reply(list);
+            }
         } catch (Exception e) {
             commandEvent.reply("Paramètres incorrects, les arguments attendus sont " + arguments);
         }

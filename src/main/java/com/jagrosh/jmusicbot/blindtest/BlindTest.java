@@ -209,9 +209,10 @@ public class BlindTest {
         return reply;
     }
 
-    public String getSongList(String nick) {
+    public List<String> getSongList(String nick) {
         Set<SongEntry> entrySet = entries.get(nick);
-        if (entrySet == null || entrySet.isEmpty()) return "Aucune chanson ajoutée pour l'instant";
+        if (entrySet == null || entrySet.isEmpty()) return Collections.singletonList("Aucune chanson ajoutée pour l'instant");
+        List<String> lists = new ArrayList<>();
         String list = "Liste des chansons ajoutées (les joueurs devront saisir les valeurs entre crochets pour marquer les points, pensez à vérifier qu'elles sont correctes) :\n";
         Iterator<SongEntry> it = entrySet.iterator();
         int i = 1;
@@ -219,12 +220,17 @@ public class BlindTest {
             SongEntry e = it.next();
             list += i + " : <" + e.url + "> [" + e.artist + "] [" + e.title + "]\n";
             i++;
+            if (i % 30 == 0) {
+                lists.add(list);
+                list = "";
+            }
         }
         if (entrySet.size() < songsPerPlayer) {
             int diff = songsPerPlayer - entrySet.size();
             list += "Il te manque encore " + diff + " chanson" + (diff > 1 ? "s" : "");
         }
-        return list;
+        if (!list.isEmpty()) lists.add(list);
+        return lists;
     }
 
     public SongEntry getCurrentSongEntry() {

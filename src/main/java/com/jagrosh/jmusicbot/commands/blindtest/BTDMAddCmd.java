@@ -30,6 +30,8 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
+import java.util.List;
+
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
@@ -79,7 +81,10 @@ public class BTDMAddCmd extends BTDMCommand {
         }
 
         private void finalReply() {
-            event.reply(blindTest.getSongList(author));
+            List<String> lists = blindTest.getSongList(author);
+            for (String list : lists) {
+                event.reply(list);
+            }
         }
 
         @Override

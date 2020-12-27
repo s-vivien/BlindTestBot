@@ -20,6 +20,8 @@ import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.commands.BTDMCommand;
 
+import java.util.List;
+
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
@@ -39,7 +41,10 @@ public class BTDMListCmd extends BTDMCommand {
     @Override
     protected void execute(CommandEvent commandEvent) {
         String author = commandEvent.getMessage().getAuthor().getName();
-        commandEvent.reply(blindTest.getSongList(author));
+        List<String> lists = blindTest.getSongList(author);
+        for (String list : lists) {
+            commandEvent.reply(list);
+        }
     }
 
 }

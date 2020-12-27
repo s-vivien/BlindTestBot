@@ -29,18 +29,18 @@ public class BTAddPointCmd extends BTDJCommand {
     public BTAddPointCmd(BlindTest blindTest) {
         this.blindTest = blindTest;
         this.name = "addpoint";
-        this.arguments = "<nick> <points>";
+        this.arguments = "<points> <nick>";
         this.help = "adds points to some user's score";
         this.guildOnly = true;
     }
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        String[] spl = commandEvent.getArgs().split(" ");
+        String[] spl = commandEvent.getArgs().split(" ", 2);
 
         try {
-            String nick = spl[0];
-            Integer pts = Integer.valueOf(spl[1]);
+            Integer pts = Integer.valueOf(spl[0]);
+            String nick = spl[1];
             if (blindTest.isKnownNick(nick)) {
                 int score = blindTest.addScore(nick, pts);
                 commandEvent.reply(pts + " ajouté" + ((pts > 1 || pts < -1) ? "s" : "") + " à " + nick + ", qui a désormais " + score);
