@@ -31,6 +31,7 @@ public class BlindTest {
     private static final int NOTFOUND_SCORE = -1;
     private static final int MAX_DIST_RATIO = 6;
     private static final int MAX_DIST_OFFSET = 3;
+    private static final double INCLUDE_TOLERANCE = 1.6;
 
     // State
     private ConcurrentHashMap<String, LinkedHashSet<SongEntry>> entries = new ConcurrentHashMap<>();
@@ -82,7 +83,7 @@ public class BlindTest {
 
         if (artistFound == null) {
             int artistAlone = calculateDistance(proposition, currentSongEntry.artist);
-            if (artistAlone <= maxDistArtist || proposition.contains(currentSongEntry.artist)) {
+            if (artistAlone <= maxDistArtist || (proposition.contains(currentSongEntry.artist) && proposition.length() <= INCLUDE_TOLERANCE * currentSongEntry.artist.length())) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);
                 return String.format(SUCCESS_REPLY_TEMPLATE, author, "l'artiste", currentSongEntry.artist, SINGLE_SCORE);
@@ -91,7 +92,7 @@ public class BlindTest {
 
         if (trackFound == null) {
             int trackAlone = calculateDistance(proposition, currentSongEntry.title);
-            if (trackAlone <= maxDistTitle || proposition.contains(currentSongEntry.title)) {
+            if (trackAlone <= maxDistTitle || (proposition.contains(currentSongEntry.title) && proposition.length() <= INCLUDE_TOLERANCE * currentSongEntry.title.length())) {
                 trackFound = author;
                 addScore(author, SINGLE_SCORE);
                 return String.format(SUCCESS_REPLY_TEMPLATE, author, "le titre", currentSongEntry.title, SINGLE_SCORE);
