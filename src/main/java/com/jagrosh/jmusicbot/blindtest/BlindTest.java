@@ -129,7 +129,7 @@ public class BlindTest {
             int empty = 0;
             for (SongEntry se : e.getValue()) if (se.title.equalsIgnoreCase(DEFAULT) || se.artist.equalsIgnoreCase(DEFAULT)) empty++;
             String warning = (empty > 0 ? " (" + empty + " proposition" + (empty > 1 ? "s" : "") + " incomplète" + (empty > 1 ? "s" : "") + ")" : "");
-            pool += String.format("%1$-8s", e.getValue().size() + "/" + songsPerPlayer) + " : " + e.getKey() + warning + "\n";
+            pool += String.format("%1$-8s", e.getValue().size() + "/" + songsPerPlayer) + " " + e.getKey() + warning + "\n";
             total += e.getValue().size();
         }
         pool += "```";
@@ -152,7 +152,7 @@ public class BlindTest {
         String scoreboard = "⏫ Scores (" + doneEntrySize + " chanson" + (doneEntrySize > 1 ? "s" : "") + " jouée" + (doneEntrySize > 1 ? "s" : "") + " sur " + totalEntrySize + ") :";
         scoreboard += "```";
         for (Map.Entry<Integer, List<String>> e : scoreMap.entrySet()) {
-            scoreboard += "\n" + String.format("%1$-12s", e.getKey() + " point" + ((e.getKey() > 1 || e.getKey() < -1) ? "s" : "")) + " : " + String.join(", ", e.getValue());
+            scoreboard += "\n" + String.format("%1$-11s", e.getKey() + " point" + ((e.getKey() > 1 || e.getKey() < -1) ? "s" : "")) + "   " + String.join(", ", e.getValue());
         }
         scoreboard += "```";
 
