@@ -102,7 +102,7 @@ public class JMusicBot {
                         new BTDMSetTitleCmd(bot, blindTest),
                         new BTDMSetArtistCmd(bot, blindTest),
                         new BTDMRemoveCmd(bot, blindTest),
-                        new BTPublicRulesCmd(blindTest),
+                        new BTPublicRulesCmd(blindTest, config.getHelp()),
                         new BTPublicPoolCmd(blindTest),
                         new BTPublicScoreboardCmd(blindTest),
                         new BTResetCmd(blindTest),

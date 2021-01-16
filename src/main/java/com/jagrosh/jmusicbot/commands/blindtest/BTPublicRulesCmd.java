@@ -25,9 +25,11 @@ import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 public class BTPublicRulesCmd extends BTPublicCommand {
 
     private BlindTest blindTest;
+    private String helpWord;
 
-    public BTPublicRulesCmd(BlindTest blindTest) {
+    public BTPublicRulesCmd(BlindTest blindTest, String helpWord) {
         this.blindTest = blindTest;
+        this.helpWord = helpWord;
         this.name = "rules";
         this.help = "prints the rules";
         this.guildOnly = true;
@@ -46,7 +48,7 @@ public class BTPublicRulesCmd extends BTPublicCommand {
                        "* 1 point est donné à la première personne qui trouve le titre, 1 point pour l'artiste, et 3 points si les deux sont donnés en même temps (et qu'aucun des deux n'avait été trouvé au préalable)\n" +
                        "* Si personne ne trouve ni l'artiste ni le titre, 1 point est retiré à la personne qui a proposé la chanson\n" +
                        "\n" +
-                       "*Pour obtenir la liste des commandes disponibles, taper `!bthelp`*";
+                       "*Pour obtenir la liste des commandes disponibles, taper `!" + helpWord + "`*";
         commandEvent.reply(rules);
     }
 }

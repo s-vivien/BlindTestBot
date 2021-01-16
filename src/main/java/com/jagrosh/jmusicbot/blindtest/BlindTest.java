@@ -60,7 +60,7 @@ public class BlindTest {
         if (currentSongEntry == null) return null;
         if (artistFound != null && trackFound != null) return null;
 
-        proposition = proposition.toLowerCase();
+        proposition = cleanLight(proposition);
 
         int combo = Math.min(calculateDistance(proposition, currentSongEntry.artist + " " + currentSongEntry.title), calculateDistance(proposition, currentSongEntry.title + " " + currentSongEntry.artist));
         if (combo <= maxDistCombo) {
@@ -82,7 +82,7 @@ public class BlindTest {
 
         if (artistFound == null) {
             int artistAlone = calculateDistance(proposition, currentSongEntry.artist);
-            if (artistAlone <= maxDistArtist) {
+            if (artistAlone <= maxDistArtist || proposition.contains(currentSongEntry.artist)) {
                 artistFound = author;
                 addScore(author, SINGLE_SCORE);
                 return String.format(SUCCESS_REPLY_TEMPLATE, author, "l'artiste", currentSongEntry.artist, SINGLE_SCORE);
@@ -91,7 +91,7 @@ public class BlindTest {
 
         if (trackFound == null) {
             int trackAlone = calculateDistance(proposition, currentSongEntry.title);
-            if (trackAlone <= maxDistTitle) {
+            if (trackAlone <= maxDistTitle || proposition.contains(currentSongEntry.title)) {
                 trackFound = author;
                 addScore(author, SINGLE_SCORE);
                 return String.format(SUCCESS_REPLY_TEMPLATE, author, "le titre", currentSongEntry.title, SINGLE_SCORE);
@@ -124,13 +124,15 @@ public class BlindTest {
 
         int total = 0;
 
+        pool += "```";
         for (Map.Entry<String, LinkedHashSet<SongEntry>> e : entries.entrySet()) {
             int empty = 0;
             for (SongEntry se : e.getValue()) if (se.title.equalsIgnoreCase(DEFAULT) || se.artist.equalsIgnoreCase(DEFAULT)) empty++;
             String warning = (empty > 0 ? " (" + empty + " proposition" + (empty > 1 ? "s" : "") + " incomplète" + (empty > 1 ? "s" : "") + ")" : "");
-            pool += e.getKey() + " : " + e.getValue().size() + "/" + songsPerPlayer + warning + "\n";
+            pool += String.format("%1$-8s", e.getValue().size() + "/" + songsPerPlayer) + " : " + e.getKey() + warning + "\n";
             total += e.getValue().size();
         }
+        pool += "```";
         pool += "**TOTAL** : " + total;
         return pool;
     }
@@ -148,9 +150,11 @@ public class BlindTest {
         }
 
         String scoreboard = "⏫ Scores (" + doneEntrySize + " chanson" + (doneEntrySize > 1 ? "s" : "") + " jouée" + (doneEntrySize > 1 ? "s" : "") + " sur " + totalEntrySize + ") :";
+        scoreboard += "```";
         for (Map.Entry<Integer, List<String>> e : scoreMap.entrySet()) {
-            scoreboard += "\n" + e.getKey() + " point" + ((e.getKey() > 1 || e.getKey() < -1) ? "s" : "") + " : " + String.join(", ", e.getValue());
+            scoreboard += "\n" + String.format("%1$-12s", e.getKey() + " point" + ((e.getKey() > 1 || e.getKey() < -1) ? "s" : "")) + " : " + String.join(", ", e.getValue());
         }
+        scoreboard += "```";
 
         return scoreboard;
     }
@@ -341,8 +345,8 @@ public class BlindTest {
         return entryList;
     }
 
-    private String cleanLight(String title) {
-        return Normalizer.normalize(title.toLowerCase(), Normalizer.Form.NFD)
+    private String cleanLight(String input) {
+        return Normalizer.normalize(input.toLowerCase(), Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
                 .replaceAll("[,\\!\\?\\:;\\.]", "")
                 .trim();
