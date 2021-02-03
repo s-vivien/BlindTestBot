@@ -39,63 +39,95 @@ public class BlindTest {
     private boolean locked = false;
 
     private Integer songsPerPlayer;
+    private Integer maximumExtrasNumber;
     private String backupPath;
 
     // Current song
     private SongEntry currentSongEntry = null;
-    private String trackFound, artistFound;
+    private boolean trackFound, artistFound;
+    private boolean[] extrasFound;
+    private int extrasYetToFind;
     private int maxDistCombo, maxDistArtist, maxDistTitle;
+    private int[] maxDistExtras;
 
     public BlindTest(BotConfig cfg) {
         songsPerPlayer = cfg.getSongsPerPlayer();
         backupPath = cfg.getBackupPath();
+        maximumExtrasNumber = cfg.getMaximumExtrasNumber();
+        extrasFound = new boolean[maximumExtrasNumber];
+        maxDistExtras = new int[maximumExtrasNumber];
     }
 
     public void clearCurrentSong() {
-        trackFound = null;
-        artistFound = null;
+        trackFound = false;
+        artistFound = false;
+        Arrays.fill(extrasFound, false);
         currentSongEntry = null;
+    }
+
+    public String whatsLeftToFind() {
+        if (trackFound && artistFound && extrasYetToFind == 0) return "Tout a été trouvé";
+        String yetToFind = "Il reste à trouver :";
+        int parts = 0;
+        if (!trackFound) yetToFind += (parts++ > 0 ? "," : "") + " le titre";
+        if (!artistFound) yetToFind += (parts++ > 0 ? "," : "") + " l'artiste";
+        if (extrasYetToFind > 0) yetToFind += (parts++ > 0 ? ", " : " ") + extrasYetToFind + " extra(s)";
+        return yetToFind;
     }
 
     public String onProposition(String author, String proposition) {
         if (currentSongEntry == null) return null;
-        if (artistFound != null && trackFound != null) return null;
+        if (artistFound && trackFound && extrasYetToFind == 0) return null;
 
         proposition = cleanLight(proposition);
 
         int combo = Math.min(calculateDistance(proposition, currentSongEntry.artist + " " + currentSongEntry.title), calculateDistance(proposition, currentSongEntry.title + " " + currentSongEntry.artist));
         if (combo <= maxDistCombo) {
-            if (artistFound == null && trackFound == null) {
-                artistFound = author;
-                trackFound = author;
+            if (!artistFound && !trackFound) {
+                artistFound = true;
+                trackFound = true;
                 addScore(author, COMBO_SCORE);
                 return String.format(SUCCESS_REPLY_TEMPLATE, author, "l'artiste et le titre", currentSongEntry.artist + "][" + currentSongEntry.title, COMBO_SCORE);
-            } else if (artistFound == null) {
-                artistFound = author;
+            } else if (!artistFound) {
+                artistFound = true;
                 addScore(author, SINGLE_SCORE);
                 return String.format(SUCCESS_REPLY_TEMPLATE, author, "l'artiste", currentSongEntry.artist, SINGLE_SCORE);
-            } else if (trackFound == null) {
-                trackFound = author;
+            } else if (!trackFound) {
+                trackFound = true;
                 addScore(author, SINGLE_SCORE);
                 return String.format(SUCCESS_REPLY_TEMPLATE, author, "le titre", currentSongEntry.title, SINGLE_SCORE);
             }
         }
 
-        if (artistFound == null) {
+        if (!artistFound) {
             int artistAlone = calculateDistance(proposition, currentSongEntry.artist);
             if (artistAlone <= maxDistArtist || (proposition.contains(currentSongEntry.artist) && proposition.length() <= INCLUDE_TOLERANCE * currentSongEntry.artist.length())) {
-                artistFound = author;
+                artistFound = true;
                 addScore(author, SINGLE_SCORE);
                 return String.format(SUCCESS_REPLY_TEMPLATE, author, "l'artiste", currentSongEntry.artist, SINGLE_SCORE);
             }
         }
 
-        if (trackFound == null) {
+        if (!trackFound) {
             int trackAlone = calculateDistance(proposition, currentSongEntry.title);
             if (trackAlone <= maxDistTitle || (proposition.contains(currentSongEntry.title) && proposition.length() <= INCLUDE_TOLERANCE * currentSongEntry.title.length())) {
-                trackFound = author;
+                trackFound = true;
                 addScore(author, SINGLE_SCORE);
                 return String.format(SUCCESS_REPLY_TEMPLATE, author, "le titre", currentSongEntry.title, SINGLE_SCORE);
+            }
+        }
+
+        if (extrasYetToFind > 0) {
+            for (int i = 0; i < currentSongEntry.extras.size(); i++) {
+                if (extrasFound[i]) continue;
+                String extra = currentSongEntry.extras.get(i);
+                int extraAlone = calculateDistance(proposition, extra);
+                if (extraAlone <= maxDistExtras[i] || (proposition.contains(extra) && proposition.length() <= INCLUDE_TOLERANCE * extra.length())) {
+                    extrasFound[i] = true;
+                    extrasYetToFind--;
+                    addScore(author, SINGLE_SCORE);
+                    return String.format(SUCCESS_REPLY_TEMPLATE, author, "un extra", extra, SINGLE_SCORE);
+                }
             }
         }
 
@@ -113,10 +145,14 @@ public class BlindTest {
         Collections.shuffle(entryList);
         clearCurrentSong();
         currentSongEntry = entryList.get(0);
+        extrasYetToFind = currentSongEntry.extras.size();
         currentSongEntry.done = true;
         maxDistCombo = Math.max(0, (currentSongEntry.artist.length() + currentSongEntry.title.length() + 1) - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
         maxDistArtist = Math.max(0, currentSongEntry.artist.length() - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
         maxDistTitle = Math.max(0, currentSongEntry.title.length() - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
+        for (int i = 0; i < currentSongEntry.extras.size(); i++) {
+            maxDistExtras[i] = Math.max(0, currentSongEntry.extras.get(i).length() - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
+        }
         return true;
     }
 
@@ -184,29 +220,51 @@ public class BlindTest {
         return 1;
     }
 
-    public int updateArtist(String author, Integer index, String artist) {
+    public boolean updateArtist(String author, Integer index, String artist) {
         SongEntry e = getEntryByIndex(author, index);
-        if (e == null) return 1;
+        if (e == null) return false;
         e.artist = cleanLight(artist.toLowerCase());
         e.recomputeOriginalTitle();
-        return 0;
+        return true;
     }
 
-    public int updateTitle(String author, Integer index, String title) {
+    public boolean updateTitle(String author, Integer index, String title) {
         SongEntry e = getEntryByIndex(author, index);
-        if (e == null) return 1;
+        if (e == null) return false;
         e.title = cleanTitle(title.toLowerCase());
         e.recomputeOriginalTitle();
-        return 0;
+        return true;
+    }
+
+    public boolean addExtra(String author, Integer index, String extra) {
+        SongEntry e = getEntryByIndex(author, index);
+        if (e == null) return false;
+        if (e.extras.size() >= maximumExtrasNumber) return false;
+        e.extras.add(extra.toLowerCase());
+        e.recomputeOriginalTitle();
+        return true;
+    }
+
+    public boolean removeExtra(String author, Integer songIndex, Integer extraIndex) {
+        SongEntry e = getEntryByIndex(author, songIndex);
+        if (e == null) return false;
+        if (extraIndex > e.extras.size()) return false;
+        e.extras.remove(extraIndex - 1);
+        e.recomputeOriginalTitle();
+        return true;
     }
 
     public boolean everyAnswerFound() {
-        return currentSongEntry != null && trackFound != null && artistFound != null;
+        if (!trackFound || !artistFound) return false;
+        for (int i = 0; i < currentSongEntry.extras.size(); i++) {
+            if (!extrasFound[i]) return false;
+        }
+        return true;
     }
 
     public String onTrackEnd() {
         String reply = "⏳ La chanson était **[ " + currentSongEntry.completeOriginalTitle + " ]**";
-        if (trackFound == null && artistFound == null) {
+        if (!trackFound && !artistFound && (currentSongEntry.extras.isEmpty() || currentSongEntry.extras.size() == extrasYetToFind)) {
             addScore(currentSongEntry.getOwner(), NOTFOUND_SCORE);
             return reply + " et personne ne l'a trouvée .. (" + NOTFOUND_SCORE + " pour " + currentSongEntry.getOwner() + ")";
         }
@@ -223,7 +281,11 @@ public class BlindTest {
         int i = 1;
         while (it.hasNext()) {
             SongEntry e = it.next();
-            list += i + " : <" + e.url + "> [" + e.artist + "] [" + e.title + "]\n";
+            list += i + " : <" + e.url + "> artiste=[" + e.artist + "] titre=[" + e.title + "]";
+            if (!e.extras.isEmpty()) {
+                for (int j = 0; j < e.extras.size(); j++) list += " extra" + (j + 1) + "=[" + e.extras.get(j) + "]";
+            }
+            list += "\n";
             i++;
             if (i % 30 == 0) {
                 lists.add(list);
@@ -397,6 +459,7 @@ public class BlindTest {
         String owner;
         String artist;
         String title;
+        List<String> extras = new ArrayList<>();
         String completeOriginalTitle;
         boolean done = false;
 
@@ -428,6 +491,9 @@ public class BlindTest {
 
         public void recomputeOriginalTitle() {
             completeOriginalTitle = artist + " - " + title;
+            for (String extra : extras) {
+                completeOriginalTitle += " - " + extra;
+            }
         }
     }
 }

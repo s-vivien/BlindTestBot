@@ -14,9 +14,9 @@ There is a tolerance for typos in the analysis of answers (Levenshtein distance)
 Blind-Test DM:   
 `!add <Youtube URL>` - adds song/playlist to the blindtest pool   
 `!list` - list the added songs   
-`!settitle <ID> <title>` - sets the song title   
-`!setartist <ID> <artist>` - sets the song artist   
-`!remove <ID>` - removes song from the blindtest pool   
+`!settitle <song index> <title>` - sets the song title   
+`!setartist <song index> <artist>` - sets the song artist   
+`!remove <song index>` - removes song from the blindtest pool   
 
 Blind-Test public:   
 `!rules` - prints the rules   

@@ -16,8 +16,8 @@
 package com.jagrosh.jmusicbot.commands.blindtest;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
-import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.Bot;
+import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTDMCommand;
 
 import java.util.List;
@@ -33,7 +33,7 @@ public class BTDMRemoveCmd extends BTDMCommand {
         super(bot);
         this.blindTest = blindTest;
         this.name = "remove";
-        this.arguments = "<Song index>";
+        this.arguments = "<song index>";
         this.help = "removes song from the blindtest pool";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.guildOnly = false;

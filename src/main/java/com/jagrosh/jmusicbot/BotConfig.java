@@ -43,7 +43,7 @@ public class BotConfig {
             successEmoji, warningEmoji, errorEmoji, loadingEmoji, searchingEmoji, backupPath, blindTestChannel;
     private boolean stayInChannel, songInGame, npImages, updatealerts, useEval, dbots;
     private long owner, maxSeconds;
-    private int songsPerPlayer;
+    private int songsPerPlayer, maximumExtrasNumber;
     private OnlineStatus status;
     private Activity game;
     private Config aliases;
@@ -96,6 +96,7 @@ public class BotConfig {
             aliases = config.getConfig("aliases");
             dbots = owner == 113156185389092864L;
             songsPerPlayer = config.getInt("songsPerPlayer");
+            maximumExtrasNumber = config.getInt("maximumExtrasNumber");
 
             // we may need to write a new config file
             boolean write = false;
@@ -257,6 +258,10 @@ public class BotConfig {
 
     public int getSongsPerPlayer() {
         return songsPerPlayer;
+    }
+
+    public int getMaximumExtrasNumber() {
+        return maximumExtrasNumber;
     }
 
     public String getBackupPath() {

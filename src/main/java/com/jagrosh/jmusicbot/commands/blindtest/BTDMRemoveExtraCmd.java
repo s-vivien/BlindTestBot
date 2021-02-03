@@ -25,16 +25,16 @@ import java.util.List;
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTDMSetTitleCmd extends BTDMCommand {
+public class BTDMRemoveExtraCmd extends BTDMCommand {
 
     private BlindTest blindTest;
 
-    public BTDMSetTitleCmd(Bot bot, BlindTest blindTest) {
+    public BTDMRemoveExtraCmd(Bot bot, BlindTest blindTest) {
         super(bot);
         this.blindTest = blindTest;
-        this.name = "settitle";
-        this.help = "sets the song title";
-        this.arguments = "<song index> <title>";
+        this.name = "removeextra";
+        this.help = "removes an extra input to guess to the song entry";
+        this.arguments = "<song index> <extra index>";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.guildOnly = false;
     }
@@ -45,11 +45,11 @@ public class BTDMSetTitleCmd extends BTDMCommand {
         String[] spl = commandEvent.getArgs().split(" ", 2);
 
         try {
-            Integer idx = Integer.valueOf(spl[0]);
-            String title = spl[1];
-            boolean updateResult = blindTest.updateTitle(author, idx, title);
-            if (!updateResult) commandEvent.reply("Aucune chanson ne correspond à cet index");
-            else commandEvent.reply("Titre mis à jour avec succès");
+            Integer songIdx = Integer.valueOf(spl[0]);
+            Integer extraIdx = Integer.valueOf(spl[1]);
+            boolean updateResult = blindTest.removeExtra(author, songIdx, extraIdx);
+            if (!updateResult) commandEvent.reply("Aucune chanson et/ou aucun extra ne correspond à cet index");
+            else commandEvent.reply("Extra retiré avec succès");
             List<String> lists = blindTest.getSongList(author);
             for (String list : lists) {
                 commandEvent.reply(list);

@@ -16,8 +16,8 @@
 package com.jagrosh.jmusicbot.commands.blindtest;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
-import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.Bot;
+import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTDMCommand;
 
 import java.util.List;

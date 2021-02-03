@@ -16,10 +16,10 @@
 package com.jagrosh.jmusicbot.commands.blindtest;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
-import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.audio.QueuedTrack;
+import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.DJCommand;
 import com.jagrosh.jmusicbot.listener.PropositionListener;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
@@ -81,14 +81,10 @@ public class BTNextCmd extends DJCommand {
                 propositionListener.setOnPropositionLambda(null);
             });
             propositionListener.setOnPropositionLambda((author, prop) -> {
-                if (author.equalsIgnoreCase(songEntry.getOwner())) return null;
+                //                if (author.equalsIgnoreCase(songEntry.getOwner())) return null;
                 String reply = blindTest.onProposition(author, prop);
                 if (reply != null) {
-                    event.reply(reply);
-                    //                    if (blindTest.everyAnswerFound()) {
-                    //                        handler.stopAndClear();
-                    //                        event.getGuild().getAudioManager().closeAudioConnection();
-                    //                    }
+                    event.reply(reply + " " + blindTest.whatsLeftToFind());
                 }
                 return null;
             });

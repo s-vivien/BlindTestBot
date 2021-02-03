@@ -16,8 +16,8 @@
 package com.jagrosh.jmusicbot.commands.blindtest;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
-import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.Bot;
+import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTDMCommand;
 
 import java.util.List;
@@ -34,7 +34,7 @@ public class BTDMSetArtistCmd extends BTDMCommand {
         this.blindTest = blindTest;
         this.name = "setartist";
         this.help = "sets the song artist";
-        this.arguments = "<ID> <artist>";
+        this.arguments = "<song index> <artist>";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.guildOnly = false;
     }
@@ -47,8 +47,8 @@ public class BTDMSetArtistCmd extends BTDMCommand {
         try {
             Integer idx = Integer.valueOf(spl[0]);
             String artist = spl[1];
-            int updateResult = blindTest.updateArtist(author, idx, artist);
-            if (updateResult == 1) commandEvent.reply("Aucune chanson ne correspond à cet index");
+            boolean updateResult = blindTest.updateArtist(author, idx, artist);
+            if (!updateResult) commandEvent.reply("Aucune chanson ne correspond à cet index");
             else commandEvent.reply("Artiste mis à jour avec succès");
             List<String> lists = blindTest.getSongList(author);
             for (String list : lists) {

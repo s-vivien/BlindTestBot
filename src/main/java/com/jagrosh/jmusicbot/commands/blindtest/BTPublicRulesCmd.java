@@ -25,11 +25,13 @@ import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 public class BTPublicRulesCmd extends BTPublicCommand {
 
     private BlindTest blindTest;
+    private int maximumExtras;
     private String helpWord;
 
-    public BTPublicRulesCmd(BlindTest blindTest, String helpWord) {
+    public BTPublicRulesCmd(BlindTest blindTest, String helpWord, int maximumExtras) {
         this.blindTest = blindTest;
         this.helpWord = helpWord;
+        this.maximumExtras = maximumExtras;
         this.name = "rules";
         this.help = "prints the rules";
         this.guildOnly = true;
@@ -41,12 +43,15 @@ public class BTPublicRulesCmd extends BTPublicCommand {
                        "* Le pool de chansons est collaboratif, chaque participant propose un nombre égal de chansons\n" +
                        "* Pour proposer une chanson, envoyer un DM au bot au format suivant : `!add <YT url>`. Quelques secondes plus tard, le bot vous répondra en vous indiquant le succès/échec de l'opération, et la liste des chansons ajoutées jusqu'à maintenant\n" +
                        "* Chaque chanson de la liste est suffixée par ce que les gens devront taper pour valider leur réponse (artiste, titre), veillez à ce que ces données soient correctes\n" +
-                       "* Si ces informations sont incorrectes ou incomplètes, vous pouvez les mettre à jour manuellement à l'aide des commandes `!setartist <id> <artist>` et `!settitle <id> <title>`\n" +
+                       "* Si ces informations sont incorrectes ou incomplètes, vous pouvez les mettre à jour manuellement à l'aide des commandes `!setartist <song index> <artist>` et `!settitle <song index> <title>`\n" +
+                       "* Il est possible d'ajouter/retirer jusqu'à " + maximumExtras + " input(s) bonus à l'aide des commandes `!addextra <song index> <extra>` et `!removeextra <song index> <extra index>`\n" +
+                       "* Ces inputs supplémentaires peuvent par exemple indiquer le titre d'un film, ou d'un jeu-vidéo, etc\n" +
                        "\n" +
                        ":bulb: **Règles du blind-test :** :bulb:\n" +
                        "* Quand la chanson démarre, tout le monde tape ses propositions directement dans le chan général\n" +
                        "* 1 point est donné à la première personne qui trouve le titre, 1 point pour l'artiste, et 3 points si les deux sont donnés en même temps (et qu'aucun des deux n'avait été trouvé au préalable)\n" +
-                       "* Si personne ne trouve ni l'artiste ni le titre, 1 point est retiré à la personne qui a proposé la chanson\n" +
+                       "* Si des inputs supplémentaires ont été fournis, 1 point est donné à la première personne qui trouve chacun d'entre-eux\n" +
+                       "* Si personne ne trouve ni l'artiste ni le titre ni aucun des inputs supplémentaires, 1 point est retiré à la personne qui a proposé la chanson\n" +
                        "\n" +
                        "*Pour obtenir la liste des commandes disponibles, taper `!" + helpWord + "`*";
         commandEvent.reply(rules);
