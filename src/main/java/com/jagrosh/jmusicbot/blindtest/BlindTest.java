@@ -161,15 +161,17 @@ public class BlindTest {
 
         int total = 0;
 
-        pool += "```";
-        for (Map.Entry<String, LinkedHashSet<SongEntry>> e : entries.entrySet()) {
-            int empty = 0;
-            for (SongEntry se : e.getValue()) if (se.title.equalsIgnoreCase(DEFAULT) || se.artist.equalsIgnoreCase(DEFAULT)) empty++;
-            String warning = (empty > 0 ? " (" + empty + " proposition" + (empty > 1 ? "s" : "") + " incomplète" + (empty > 1 ? "s" : "") + ")" : "");
-            pool += String.format("%1$-8s", e.getValue().size() + "/" + songsPerPlayer) + " " + e.getKey() + warning + "\n";
-            total += e.getValue().size();
+        if (!entries.isEmpty()) {
+            pool += "```";
+            for (Map.Entry<String, LinkedHashSet<SongEntry>> e : entries.entrySet()) {
+                int empty = 0;
+                for (SongEntry se : e.getValue()) if (se.title.equalsIgnoreCase(DEFAULT) || se.artist.equalsIgnoreCase(DEFAULT)) empty++;
+                String warning = (empty > 0 ? " (" + empty + " proposition" + (empty > 1 ? "s" : "") + " incomplète" + (empty > 1 ? "s" : "") + ")" : "");
+                pool += String.format("%1$-8s", e.getValue().size() + "/" + songsPerPlayer) + " " + e.getKey() + warning + "\n";
+                total += e.getValue().size();
+            }
+            pool += "```";
         }
-        pool += "```";
         pool += "**TOTAL** : " + total;
         return pool;
     }
