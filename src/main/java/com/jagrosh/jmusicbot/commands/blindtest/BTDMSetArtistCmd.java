@@ -48,14 +48,14 @@ public class BTDMSetArtistCmd extends BTDMCommand {
             Integer idx = Integer.valueOf(spl[0]);
             String artist = spl[1];
             boolean updateResult = blindTest.updateArtist(author, idx, artist);
-            if (!updateResult) commandEvent.reply("Aucune chanson ne correspond à cet index");
-            else commandEvent.reply("Artiste mis à jour avec succès");
+            if (!updateResult) commandEvent.reply("Error : could not find any submission with that index");
+            else commandEvent.reply("Song artist successfully updated");
             List<String> lists = blindTest.getSongList(author);
             for (String list : lists) {
                 commandEvent.reply(list);
             }
         } catch (Exception e) {
-            commandEvent.reply("Paramètres incorrects, les arguments attendus sont " + arguments);
+            commandEvent.reply("Invalid parameters, expected " + arguments);
         }
     }
 

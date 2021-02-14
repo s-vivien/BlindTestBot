@@ -53,11 +53,11 @@ public class BTNextCmd extends DJCommand {
     public void doCommand(CommandEvent commandEvent) {
         AudioHandler handler = (AudioHandler) commandEvent.getGuild().getAudioManager().getSendingHandler();
         if (handler.getPlayer().getPlayingTrack() != null) {
-            commandEvent.reply("La chanson précédente n'est pas terminée :upside_down:");
+            commandEvent.reply("Previous song is still playing :upside_down:");
             return;
         }
         if (!blindTest.pickRandomNextSong()) {
-            commandEvent.reply("Toutes les chansons ont été jouées :tired_face:");
+            commandEvent.reply("No more songs to play :tired_face:");
             return;
         }
 
@@ -89,7 +89,7 @@ public class BTNextCmd extends DJCommand {
                 return null;
             });
             handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor()));
-            event.reply("\uD83D\uDEA8 Chanson proposée par **" + songEntry.getOwner() + "** qui ne pourra pas jouer durant ce tour \uD83D\uDEA8");
+            event.reply("\uD83D\uDEA8 Submission from **" + songEntry.getOwner() + "** who cannot play during this round \uD83D\uDEA8");
         }
 
         @Override

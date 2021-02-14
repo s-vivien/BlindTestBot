@@ -36,6 +36,6 @@ public class BTResetCmd extends BTDJCommand {
     @Override
     protected void execute(CommandEvent commandEvent) {
         blindTest.reset();
-        commandEvent.reply(":recycle: Reset effectué avec succès !");
+        commandEvent.reply(":recycle: Game successfully reset !");
     }
 }

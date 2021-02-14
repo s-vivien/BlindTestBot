@@ -51,7 +51,7 @@ public class BTDMAddCmd extends BTDMCommand {
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        if (blindTest.getLock()) commandEvent.reply("Il n'est plus possible de changer les propositions");
+        if (blindTest.getLock()) commandEvent.reply("You can no longer change your submissions");
         else {
             String url = commandEvent.getMessage().getContentRaw().substring("!add ".length()).trim();
             if (url.startsWith("<") && url.endsWith(">")) url = url.substring(1, url.length() - 1);
@@ -72,10 +72,10 @@ public class BTDMAddCmd extends BTDMCommand {
         private int addSingleTrack(AudioTrack audioTrack) {
             TrackInfo info = extractArtistAndTrack(audioTrack.getInfo().uri);
             int addResult = blindTest.addSongRequest(author, audioTrack.getInfo().uri, info != null ? info.artist : BlindTest.DEFAULT, info != null ? info.track : BlindTest.DEFAULT);
-            String reply = "Ajout de **" + audioTrack.getInfo().title + "** ... ";
-            if (addResult == 1) reply += ":no_entry_sign: Cette chanson avait déjà été ajoutée";
-            else if (addResult == 2) reply += ":no_entry_sign: Il n'y a plus de place, nombre maximum de chansons atteint";
-            else reply += ":white_check_mark: Chanson ajoutée avec succès" + (info == null ? " (:rotating_light: probable erreur dans le titre/artiste)" : "");
+            String reply = "Adding **" + audioTrack.getInfo().title + "** ... ";
+            if (addResult == 1) reply += ":no_entry_sign: This song has already been added";
+            else if (addResult == 2) reply += ":no_entry_sign: Maximum number of songs has been reached";
+            else reply += ":white_check_mark: Song successfully added" + (info == null ? " (:rotating_light: there might be an error in artist and/or title)" : "");
             event.reply(reply);
             return addResult;
         }
@@ -103,12 +103,12 @@ public class BTDMAddCmd extends BTDMCommand {
 
         @Override
         public void noMatches() {
-            event.reply("Mauvais paramètre..");
+            event.reply("Wrong parameter..");
         }
 
         @Override
         public void loadFailed(FriendlyException e) {
-            event.reply("Le chargement de la vidéo/playlist a échoué..");
+            event.reply("The video/playlist loading failed..");
         }
     }
 

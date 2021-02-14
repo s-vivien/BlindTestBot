@@ -39,21 +39,20 @@ public class BTPublicRulesCmd extends BTPublicCommand {
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        String rules = ":bulb: **Propositions de chansons :** :bulb:\n" +
-                       "* Le pool de chansons est collaboratif, chaque participant propose un nombre égal de chansons\n" +
-                       "* Pour proposer une chanson, envoyer un DM au bot au format suivant : `!add <YT url>`. Quelques secondes plus tard, le bot vous répondra en vous indiquant le succès/échec de l'opération, et la liste des chansons ajoutées jusqu'à maintenant\n" +
-                       "* Chaque chanson de la liste est suffixée par ce que les gens devront taper pour valider leur réponse (artiste, titre), veillez à ce que ces données soient correctes\n" +
-                       "* Si ces informations sont incorrectes ou incomplètes, vous pouvez les mettre à jour manuellement à l'aide des commandes `!setartist <song index> <artist>` et `!settitle <song index> <title>`\n" +
-                       "* Il est possible d'ajouter/retirer jusqu'à " + maximumExtras + " input(s) bonus à l'aide des commandes `!addextra <song index> <extra>` et `!removeextra <song index> <extra index>`\n" +
-                       "* Ces inputs supplémentaires peuvent par exemple indiquer le titre d'un film, ou d'un jeu-vidéo, etc\n" +
+        String rules = ":bulb: **Submissions :** :bulb:\n" +
+                       "* The song pool is collaborative, everyone can submit tracks to the bot\n" +
+                       "* To add a song, send a DM to the bot using the following syntax : `!add <YT url>`. A few seconds later, the bot will respond to you indicating the success/failure of the operation, and the list of songs added so far\n" +
+                       "* For every successful submission, the bot will indicate in squares brackets the values the players will have to guess. Make sure they are correct\n" +
+                       "* In case they are not, you can update them manually using the commands `!setartist <song index> <artist>` and `!settitle <song index> <title>`\n" +
+                       "* Players can also add/remove up to " + maximumExtras + " extra input(s) to guess using the command `!addextra <song index> <extra>` and `!removeextra <song index> <extra index>`\n" +
                        "\n" +
-                       ":bulb: **Règles du blind-test :** :bulb:\n" +
-                       "* Quand la chanson démarre, tout le monde tape ses propositions directement dans le chan général\n" +
-                       "* 1 point est donné à la première personne qui trouve le titre, 1 point pour l'artiste, et 3 points si les deux sont donnés en même temps (et qu'aucun des deux n'avait été trouvé au préalable)\n" +
-                       "* Si des inputs supplémentaires ont été fournis, 1 point est donné à la première personne qui trouve chacun d'entre-eux\n" +
-                       "* Si personne ne trouve ni l'artiste ni le titre ni aucun des inputs supplémentaires, 1 point est retiré à la personne qui a proposé la chanson\n" +
+                       ":bulb: **Blind-test rules :** :bulb:\n" +
+                       "* When the song starts playing, players type their guesses directly in the chat\n" +
+                       "* 1 point is awarded to the first player who finds the correct track title, 1 point for the artist, and 3 points if both of them are simultaneously found (assuming neither of them have been found so far)\n" +
+                       "* If extra inputs have been added, 1 point is awarded to the first player who finds each of them (extra inputs are not considered for combos)\n" +
+                       "* If none of the inputs (artist, title, extras) of a submission is found, 1 point is removed from the submission's author's score\n" +
                        "\n" +
-                       "*Pour obtenir la liste des commandes disponibles, taper `!" + helpWord + "`*";
+                       "*Type `!" + helpWord + "`* for the complete list of available commands";
         commandEvent.reply(rules);
     }
 }

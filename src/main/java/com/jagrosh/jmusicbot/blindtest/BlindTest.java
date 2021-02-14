@@ -26,7 +26,7 @@ public class BlindTest {
     public static final String DEFAULT = "N/A";
     private static final String EMOJI = ":fire:";
     private static final int SINGLE_SCORE = 1;
-    private static final String SUCCESS_REPLY_TEMPLATE = EMOJI + " %s a trouvé %s `[%s]` ! (+%d) " + EMOJI;
+    private static final String SUCCESS_REPLY_TEMPLATE = EMOJI + " %s found %s `[%s]` ! (+%d) " + EMOJI;
     private static final int COMBO_SCORE = 3;
     private static final int NOTFOUND_SCORE = -1;
     private static final int MAX_DIST_RATIO = 6;
@@ -66,11 +66,11 @@ public class BlindTest {
     }
 
     public String whatsLeftToFind() {
-        if (trackFound && artistFound && extrasYetToFind == 0) return "Tout a été trouvé";
-        String yetToFind = "Il reste à trouver :";
+        if (trackFound && artistFound && extrasYetToFind == 0) return "Everything has been found";
+        String yetToFind = "Left to find :";
         int parts = 0;
-        if (!trackFound) yetToFind += (parts++ > 0 ? "," : "") + " le titre";
-        if (!artistFound) yetToFind += (parts++ > 0 ? "," : "") + " l'artiste";
+        if (!trackFound) yetToFind += (parts++ > 0 ? "," : "") + " title";
+        if (!artistFound) yetToFind += (parts++ > 0 ? "," : "") + " artist";
         if (extrasYetToFind > 0) yetToFind += (parts++ > 0 ? ", " : " ") + extrasYetToFind + " extra(s)";
         return yetToFind;
     }
@@ -87,15 +87,15 @@ public class BlindTest {
                 artistFound = true;
                 trackFound = true;
                 addScore(author, COMBO_SCORE);
-                return String.format(SUCCESS_REPLY_TEMPLATE, author, "l'artiste et le titre", currentSongEntry.artist + "][" + currentSongEntry.title, COMBO_SCORE);
+                return String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist and the title", currentSongEntry.artist + "][" + currentSongEntry.title, COMBO_SCORE);
             } else if (!artistFound) {
                 artistFound = true;
                 addScore(author, SINGLE_SCORE);
-                return String.format(SUCCESS_REPLY_TEMPLATE, author, "l'artiste", currentSongEntry.artist, SINGLE_SCORE);
+                return String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist", currentSongEntry.artist, SINGLE_SCORE);
             } else if (!trackFound) {
                 trackFound = true;
                 addScore(author, SINGLE_SCORE);
-                return String.format(SUCCESS_REPLY_TEMPLATE, author, "le titre", currentSongEntry.title, SINGLE_SCORE);
+                return String.format(SUCCESS_REPLY_TEMPLATE, author, "the title", currentSongEntry.title, SINGLE_SCORE);
             }
         }
 
@@ -104,7 +104,7 @@ public class BlindTest {
             if (artistAlone <= maxDistArtist || (proposition.contains(currentSongEntry.artist) && proposition.length() <= INCLUDE_TOLERANCE * currentSongEntry.artist.length())) {
                 artistFound = true;
                 addScore(author, SINGLE_SCORE);
-                return String.format(SUCCESS_REPLY_TEMPLATE, author, "l'artiste", currentSongEntry.artist, SINGLE_SCORE);
+                return String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist", currentSongEntry.artist, SINGLE_SCORE);
             }
         }
 
@@ -113,7 +113,7 @@ public class BlindTest {
             if (trackAlone <= maxDistTitle || (proposition.contains(currentSongEntry.title) && proposition.length() <= INCLUDE_TOLERANCE * currentSongEntry.title.length())) {
                 trackFound = true;
                 addScore(author, SINGLE_SCORE);
-                return String.format(SUCCESS_REPLY_TEMPLATE, author, "le titre", currentSongEntry.title, SINGLE_SCORE);
+                return String.format(SUCCESS_REPLY_TEMPLATE, author, "the title", currentSongEntry.title, SINGLE_SCORE);
             }
         }
 
@@ -126,7 +126,7 @@ public class BlindTest {
                     extrasFound[i] = true;
                     extrasYetToFind--;
                     addScore(author, SINGLE_SCORE);
-                    return String.format(SUCCESS_REPLY_TEMPLATE, author, "un extra", extra, SINGLE_SCORE);
+                    return String.format(SUCCESS_REPLY_TEMPLATE, author, "one extra", extra, SINGLE_SCORE);
                 }
             }
         }
@@ -157,7 +157,7 @@ public class BlindTest {
     }
 
     public String getSongPool() {
-        String pool = "\uD83D\uDCBF Pool de chansons\n";
+        String pool = "\uD83D\uDCBF Submission pool\n";
 
         int total = 0;
 
@@ -166,7 +166,7 @@ public class BlindTest {
             for (Map.Entry<String, LinkedHashSet<SongEntry>> e : entries.entrySet()) {
                 int empty = 0;
                 for (SongEntry se : e.getValue()) if (se.title.equalsIgnoreCase(DEFAULT) || se.artist.equalsIgnoreCase(DEFAULT)) empty++;
-                String warning = (empty > 0 ? " (" + empty + " proposition" + (empty > 1 ? "s" : "") + " incomplète" + (empty > 1 ? "s" : "") + ")" : "");
+                String warning = (empty > 0 ? " (" + empty + " incomplete submission" + (empty > 1 ? "s" : "") + ")" : "");
                 pool += String.format("%1$-8s", e.getValue().size() + "/" + songsPerPlayer) + " " + e.getKey() + warning + "\n";
                 total += e.getValue().size();
             }
@@ -188,7 +188,7 @@ public class BlindTest {
             scoreMap.get(e.getValue()).add(e.getKey());
         }
 
-        String scoreboard = "⏫ Scores (" + doneEntrySize + " chanson" + (doneEntrySize > 1 ? "s" : "") + " jouée" + (doneEntrySize > 1 ? "s" : "") + " sur " + totalEntrySize + ") :";
+        String scoreboard = "⏫ Scores (" + doneEntrySize + " track" + (doneEntrySize > 1 ? "s" : "") + " played out of " + totalEntrySize + ") :";
         scoreboard += "```";
         for (Map.Entry<Integer, List<String>> e : scoreMap.entrySet()) {
             scoreboard += "\n" + String.format("%1$-11s", e.getKey() + " point" + ((e.getKey() > 1 || e.getKey() < -1) ? "s" : "")) + "   " + String.join(", ", e.getValue());
@@ -265,10 +265,10 @@ public class BlindTest {
     }
 
     public String onTrackEnd() {
-        String reply = "⏳ La chanson était **[ " + currentSongEntry.completeOriginalTitle + " ]**";
+        String reply = "⏳ The track was **[ " + currentSongEntry.completeOriginalTitle + " ]**";
         if (!trackFound && !artistFound && (currentSongEntry.extras.isEmpty() || currentSongEntry.extras.size() == extrasYetToFind)) {
             addScore(currentSongEntry.getOwner(), NOTFOUND_SCORE);
-            return reply + " et personne ne l'a trouvée .. (" + NOTFOUND_SCORE + " pour " + currentSongEntry.getOwner() + ")";
+            return reply + " and no one found it .. (" + NOTFOUND_SCORE + " for " + currentSongEntry.getOwner() + ")";
         }
         clearCurrentSong();
         return reply;
@@ -276,14 +276,14 @@ public class BlindTest {
 
     public List<String> getSongList(String nick) {
         Set<SongEntry> entrySet = entries.get(nick);
-        if (entrySet == null || entrySet.isEmpty()) return Collections.singletonList("Aucune chanson ajoutée pour l'instant");
+        if (entrySet == null || entrySet.isEmpty()) return Collections.singletonList("No submissions added yet");
         List<String> lists = new ArrayList<>();
-        String list = "Liste des chansons ajoutées (les joueurs devront saisir les valeurs entre crochets pour marquer les points, pensez à vérifier qu'elles sont correctes) :\n";
+        String list = "Submissions (players will have to guess the values in square brackets, please check their correctness) :\n";
         Iterator<SongEntry> it = entrySet.iterator();
         int i = 1;
         while (it.hasNext()) {
             SongEntry e = it.next();
-            list += i + " : <" + e.url + "> artiste=[" + e.artist + "] titre=[" + e.title + "]";
+            list += i + " : <" + e.url + "> artist=[" + e.artist + "] title=[" + e.title + "]";
             if (!e.extras.isEmpty()) {
                 for (int j = 0; j < e.extras.size(); j++) list += " extra" + (j + 1) + "=[" + e.extras.get(j) + "]";
             }
@@ -296,7 +296,7 @@ public class BlindTest {
         }
         if (entrySet.size() < songsPerPlayer) {
             int diff = songsPerPlayer - entrySet.size();
-            list += "Il te manque encore " + diff + " chanson" + (diff > 1 ? "s" : "");
+            list += diff + " submission" + (diff > 1 ? "s" : "") + " left";
         }
         if (!list.isEmpty()) lists.add(list);
         return lists;
@@ -366,11 +366,11 @@ public class BlindTest {
             writeToFile(computeBackFilePath(name + "_entries"), entriesJson);
             writeToFile(computeBackFilePath(name + "_scores"), scoresJson);
         } catch (IllegalStateException e) {
-            return "Un backup portant le même nom existe déjà..";
+            return "A backup already exists with that name..";
         } catch (IOException e) {
-            return "Erreur lors du backup..";
+            return "Error while backuping the game state..";
         }
-        return "Backup réalisé avec succès !";
+        return "Backup successfully completed !";
     }
 
     public String restoreState(String name) {
@@ -382,11 +382,11 @@ public class BlindTest {
             Type scoresType = new TypeToken<HashMap<String, Integer>>() {}.getType();
             this.scores = GSON.fromJson(scoresJson, scoresType);
         } catch (IllegalStateException e) {
-            return "Aucun fichier de backup portant ce nom n'a été trouvé..";
+            return "No backup found with that name..";
         } catch (JsonParseException | IOException e) {
-            return "Erreur lors de la restauration du backup..";
+            return "Error while restoring the game state..";
         }
-        return "Restauration réalisée avec succès !";
+        return "Backup successfully restored !";
     }
 
     private SongEntry getEntryByIndex(String author, Integer index) {

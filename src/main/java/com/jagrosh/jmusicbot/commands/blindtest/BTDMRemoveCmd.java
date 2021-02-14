@@ -41,23 +41,23 @@ public class BTDMRemoveCmd extends BTDMCommand {
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        if (blindTest.getLock()) commandEvent.reply("Il n'est plus possible de changer les propositions");
+        if (blindTest.getLock()) commandEvent.reply("You can no longer change your submissions");
         else {
             String author = commandEvent.getMessage().getAuthor().getName();
             Integer idx;
             try {
                 idx = Integer.valueOf(commandEvent.getArgs());
                 int removeResult = blindTest.removeSongRequest(author, idx);
-                if (removeResult == 1) commandEvent.reply("Aucune chanson ne correspond à cet index");
+                if (removeResult == 1) commandEvent.reply("Error : could not find any submission with that index");
                 else {
-                    commandEvent.reply("Chanson retirée avec succès");
+                    commandEvent.reply("Song successfully removed");
                     List<String> lists = blindTest.getSongList(author);
                     for (String list : lists) {
                         commandEvent.reply(list);
                     }
                 }
             } catch (Exception e) {
-                commandEvent.reply("Index au mauvais format");
+                commandEvent.reply("Badly formatted index");
             }
         }
     }

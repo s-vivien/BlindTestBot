@@ -48,14 +48,14 @@ public class BTDMAddExtraCmd extends BTDMCommand {
             Integer songIdx = Integer.valueOf(spl[0]);
             String extra = spl[1];
             boolean updateResult = blindTest.addExtra(author, songIdx, extra);
-            if (!updateResult) commandEvent.reply("Aucune chanson ne correspond à cet index, ou le nombre maximum d'extras a été atteint");
-            else commandEvent.reply("Extra ajouté avec succès");
+            if (!updateResult) commandEvent.reply("Error : could not find any submission with that index, or the maximum number of extras has been reached");
+            else commandEvent.reply("Extra successfully added");
             List<String> lists = blindTest.getSongList(author);
             for (String list : lists) {
                 commandEvent.reply(list);
             }
         } catch (Exception e) {
-            commandEvent.reply("Paramètres incorrects, les arguments attendus sont " + arguments);
+            commandEvent.reply("Invalid parameters, expected " + arguments);
         }
     }
 

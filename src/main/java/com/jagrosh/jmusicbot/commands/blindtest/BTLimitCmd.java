@@ -39,9 +39,9 @@ public class BTLimitCmd extends BTDJCommand {
         try {
             Integer limit = Integer.valueOf(commandEvent.getArgs());
             blindTest.setSongsPerPlayer(limit);
-            commandEvent.reply("Les joueurs sont désormais limités à " + limit + " proposition" + (limit > 1 ? "s" : ""));
+            commandEvent.reply("Players are now limited to " + limit + " submissions" + (limit > 1 ? "s" : ""));
         } catch (Exception e) {
-            commandEvent.reply("Paramètres incorrects, les arguments attendus sont " + arguments);
+            commandEvent.reply("Invalid parameters, expected " + arguments);
         }
     }
 }

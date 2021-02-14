@@ -36,6 +36,6 @@ public class BTLockPoolCmd extends BTDJCommand {
     @Override
     protected void execute(CommandEvent commandEvent) {
         boolean lock = blindTest.swapLock();
-        commandEvent.reply("Les propositions de chansons sont désormais **" + (lock ? "FERMEES :lock:" : "OUVERTES :unlock:") + "**");
+        commandEvent.reply("Submissions are now **" + (lock ? "LOCKED :lock:" : "UNLOCKED :unlock:") + "**");
     }
 }

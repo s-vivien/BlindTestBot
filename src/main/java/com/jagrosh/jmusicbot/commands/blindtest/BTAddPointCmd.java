@@ -43,12 +43,12 @@ public class BTAddPointCmd extends BTDJCommand {
             String nick = spl[1];
             if (blindTest.isKnownNick(nick)) {
                 int score = blindTest.addScore(nick, pts);
-                commandEvent.reply(pts + " ajouté" + ((pts > 1 || pts < -1) ? "s" : "") + " à " + nick + ", qui a désormais " + score);
+                commandEvent.reply(pts + " added" + ((pts > 1 || pts < -1) ? "s" : "") + " to " + nick + ", who now has " + score);
             } else {
-                commandEvent.reply("Joueur inconnu..");
+                commandEvent.reply("Unknown player..");
             }
         } catch (Exception e) {
-            commandEvent.reply("Paramètres incorrects, les arguments attendus sont " + arguments);
+            commandEvent.reply("Invalid parameters, expected les" + arguments);
         }
     }
 }

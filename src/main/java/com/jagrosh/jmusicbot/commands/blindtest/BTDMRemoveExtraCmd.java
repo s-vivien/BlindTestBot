@@ -48,14 +48,14 @@ public class BTDMRemoveExtraCmd extends BTDMCommand {
             Integer songIdx = Integer.valueOf(spl[0]);
             Integer extraIdx = Integer.valueOf(spl[1]);
             boolean updateResult = blindTest.removeExtra(author, songIdx, extraIdx);
-            if (!updateResult) commandEvent.reply("Aucune chanson et/ou aucun extra ne correspond à cet index");
-            else commandEvent.reply("Extra retiré avec succès");
+            if (!updateResult) commandEvent.reply("Error : could not find any submission and/or extra with that index");
+            else commandEvent.reply("Extra successfully removed");
             List<String> lists = blindTest.getSongList(author);
             for (String list : lists) {
                 commandEvent.reply(list);
             }
         } catch (Exception e) {
-            commandEvent.reply("Paramètres incorrects, les arguments attendus sont " + arguments);
+            commandEvent.reply("Invalid parameters, expected " + arguments);
         }
     }
 
