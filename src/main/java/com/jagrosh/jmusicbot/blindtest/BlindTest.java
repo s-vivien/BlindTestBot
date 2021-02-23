@@ -176,11 +176,16 @@ public class BlindTest {
         return pool;
     }
 
+    public int getEntriesSize() {
+        return entries.entrySet().stream().mapToInt(e->e.getValue().size()).sum();
+    }
+
+    public int getDoneEntriesSize() {
+        return entries.entrySet().stream().mapToInt(e-> (int) e.getValue().stream().filter(s->s.done).count()).sum();
+    }
+
     public String getScoreBoard() {
-        List<SongEntry> entryList = getFlatEntries();
-        int totalEntrySize = entryList.size();
-        entryList = entryList.stream().filter(e -> e.done).collect(Collectors.toList());
-        int doneEntrySize = entryList.size();
+        int doneEntrySize = getDoneEntriesSize();
 
         TreeMap<Integer, List<String>> scoreMap = new TreeMap<>(Collections.reverseOrder());
         for (Map.Entry<String, Integer> e : scores.entrySet()) {
@@ -188,7 +193,7 @@ public class BlindTest {
             scoreMap.get(e.getValue()).add(e.getKey());
         }
 
-        String scoreboard = "⏫ Scores (" + doneEntrySize + " track" + (doneEntrySize > 1 ? "s" : "") + " played out of " + totalEntrySize + ") :";
+        String scoreboard = "⏫ Scores (" + doneEntrySize + " track" + (doneEntrySize > 1 ? "s" : "") + " played out of " + getEntriesSize() + ") :";
         scoreboard += "```";
         for (Map.Entry<Integer, List<String>> e : scoreMap.entrySet()) {
             scoreboard += "\n" + String.format("%1$-11s", e.getKey() + " point" + ((e.getKey() > 1 || e.getKey() < -1) ? "s" : "")) + "   " + String.join(", ", e.getValue());

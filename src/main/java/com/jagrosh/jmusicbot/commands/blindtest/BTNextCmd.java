@@ -89,7 +89,7 @@ public class BTNextCmd extends DJCommand {
                 return null;
             });
             handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor()));
-            event.reply("\uD83D\uDEA8 Submission from **" + songEntry.getOwner() + "** who cannot play during this round \uD83D\uDEA8");
+            event.reply("\uD83D\uDEA8 Submission " + blindTest.getDoneEntriesSize() + "/" + blindTest.getEntriesSize() + " from **" + songEntry.getOwner() + "** who cannot play during this round \uD83D\uDEA8 " + blindTest.whatsLeftToFind());
         }
 
         @Override
