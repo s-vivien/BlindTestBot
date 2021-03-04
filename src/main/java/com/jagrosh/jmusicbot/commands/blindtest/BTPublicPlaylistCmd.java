@@ -17,25 +17,33 @@ package com.jagrosh.jmusicbot.commands.blindtest;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
-import com.jagrosh.jmusicbot.commands.BTDJCommand;
+import com.jagrosh.jmusicbot.commands.BTPublicCommand;
+
+import java.util.List;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class BTBackupCmd extends BTDJCommand {
+public class BTPublicPlaylistCmd extends BTPublicCommand {
 
     private BlindTest blindTest;
 
-    public BTBackupCmd(BlindTest blindTest) {
+    public BTPublicPlaylistCmd(BlindTest blindTest) {
         this.blindTest = blindTest;
-        this.name = "backup";
-        this.arguments = "<Backup name>";
-        this.help = "backups the state of the game";
+        this.name = "playlist";
+        this.help = "generates a YT playlist of all the songs that have been played so far";
         this.guildOnly = true;
     }
 
     @Override
     protected void execute(CommandEvent commandEvent) {
-        commandEvent.reply(blindTest.backupState(commandEvent.getArgs(), true));
+        List<String> playlistUrls = blindTest.getPoolPlaylists();
+        if (playlistUrls.isEmpty()) {
+            commandEvent.reply("No song have been played so far :confused:");
+        } else {
+            for (String url : playlistUrls) {
+                commandEvent.reply(url);
+            }
+        }
     }
 }

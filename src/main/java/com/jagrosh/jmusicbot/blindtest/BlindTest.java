@@ -4,6 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import com.jagrosh.jmusicbot.BotConfig;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -24,6 +28,7 @@ public class BlindTest {
 
     private Gson GSON = new Gson();
     public static final String DEFAULT = "N/A";
+    private static final String AUTOBACKUP_NAME = "AUTO";
     private static final String EMOJI = ":fire:";
     private static final int SINGLE_SCORE = 1;
     private static final String SUCCESS_REPLY_TEMPLATE = EMOJI + " %s found %s `[%s]` ! (+%d) " + EMOJI;
@@ -32,6 +37,7 @@ public class BlindTest {
     private static final int MAX_DIST_RATIO = 6;
     private static final int MAX_DIST_OFFSET = 3;
     private static final double INCLUDE_TOLERANCE = 1.6;
+    private static final OkHttpClient client = new OkHttpClient();
 
     // State
     private ConcurrentHashMap<String, LinkedHashSet<SongEntry>> entries = new ConcurrentHashMap<>();
@@ -56,6 +62,32 @@ public class BlindTest {
         maximumExtrasNumber = cfg.getMaximumExtrasNumber();
         extrasFound = new boolean[maximumExtrasNumber];
         maxDistExtras = new int[maximumExtrasNumber];
+    }
+
+    public List<String> getPoolPlaylists() {
+        List<String> data = new ArrayList<>();
+        List<String> ytIds = getFlatEntries().stream().filter(e -> e.done).map(e -> e.url.split("=")[1]).collect(Collectors.toList());
+        if (!ytIds.isEmpty()) {
+            data.add("YT playlist(s) of the " + ytIds.size() + " already played songs :");
+            for (int i = 0; i < ytIds.size(); i += 50) {
+                String longUrl = "http://www.youtube.com/watch_videos?video_ids=" + String.join(",", ytIds.subList(i, Math.min(i + 50, ytIds.size())));
+                // Call YT to get the short playlist link
+                Request request = new Request.Builder()
+                        .url(longUrl)
+                        .get()
+                        .build();
+                try {
+                    Response response = client.newCall(request).execute();
+                    data.add("<" + response.request().url().toString() + ">");
+                } catch (IOException e) {
+                    // If an error occurs, discard the whole list ..
+                    data.clear();
+                    data.add("Error while creating YT playlist :angry:");
+                    break;
+                }
+            }
+        }
+        return data;
     }
 
     public void clearCurrentSong() {
@@ -139,6 +171,7 @@ public class BlindTest {
     }
 
     public boolean pickRandomNextSong() {
+        backupState(AUTOBACKUP_NAME, false);
         List<SongEntry> entryList = getFlatEntries();
         entryList = entryList.stream().filter(e -> !e.done).collect(Collectors.toList());
         if (entryList.isEmpty()) return false;
@@ -157,6 +190,7 @@ public class BlindTest {
     }
 
     public String getSongPool() {
+        backupState(AUTOBACKUP_NAME, false);
         String pool = "\uD83D\uDCBF Submission pool\n";
 
         int total = 0;
@@ -177,14 +211,15 @@ public class BlindTest {
     }
 
     public int getEntriesSize() {
-        return entries.entrySet().stream().mapToInt(e->e.getValue().size()).sum();
+        return entries.entrySet().stream().mapToInt(e -> e.getValue().size()).sum();
     }
 
     public int getDoneEntriesSize() {
-        return entries.entrySet().stream().mapToInt(e-> (int) e.getValue().stream().filter(s->s.done).count()).sum();
+        return entries.entrySet().stream().mapToInt(e -> (int) e.getValue().stream().filter(s -> s.done).count()).sum();
     }
 
     public String getScoreBoard() {
+        backupState(AUTOBACKUP_NAME, false);
         int doneEntrySize = getDoneEntriesSize();
 
         TreeMap<Integer, List<String>> scoreMap = new TreeMap<>(Collections.reverseOrder());
@@ -332,9 +367,9 @@ public class BlindTest {
         return previousScore;
     }
 
-    private void writeToFile(String path, String content) throws IOException {
+    private void writeToFile(String path, String content, boolean checkIfExists) throws IOException {
         Path p = Paths.get(path);
-        if (p.toFile().exists()) throw new IllegalStateException();
+        if (checkIfExists && p.toFile().exists()) throw new IllegalStateException();
         try (BufferedWriter writer = Files.newBufferedWriter(p)) {
             writer.write(content);
         }
@@ -364,12 +399,12 @@ public class BlindTest {
         scores.clear();
     }
 
-    public String backupState(String name) {
+    public String backupState(String name, boolean checkIfExists) {
         String entriesJson = GSON.toJson(entries);
         String scoresJson = GSON.toJson(scores);
         try {
-            writeToFile(computeBackFilePath(name + "_entries"), entriesJson);
-            writeToFile(computeBackFilePath(name + "_scores"), scoresJson);
+            writeToFile(computeBackFilePath(name + "_entries"), entriesJson, checkIfExists);
+            writeToFile(computeBackFilePath(name + "_scores"), scoresJson, checkIfExists);
         } catch (IllegalStateException e) {
             return "A backup already exists with that name..";
         } catch (IOException e) {

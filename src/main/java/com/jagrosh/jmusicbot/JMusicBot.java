@@ -106,6 +106,7 @@ public class JMusicBot {
                         new BTDMRemoveCmd(bot, blindTest),
                         new BTPublicRulesCmd(blindTest, config.getHelp(), config.getMaximumExtrasNumber()),
                         new BTPublicPoolCmd(blindTest),
+                        new BTPublicPlaylistCmd(blindTest),
                         new BTPublicScoreboardCmd(blindTest),
                         new BTResetCmd(blindTest),
                         new BTLimitCmd(blindTest),
