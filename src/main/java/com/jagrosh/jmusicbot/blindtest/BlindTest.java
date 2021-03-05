@@ -56,6 +56,10 @@ public class BlindTest {
     private int maxDistCombo, maxDistArtist, maxDistTitle;
     private int[] maxDistExtras;
 
+    public enum AddResult {
+        SUCCESS, ALREADY_ADDED, FULL_LIST, PEGI18
+    }
+
     public BlindTest(BotConfig cfg) {
         songsPerPlayer = cfg.getSongsPerPlayer();
         backupPath = cfg.getBackupPath();
@@ -238,28 +242,28 @@ public class BlindTest {
         return scoreboard;
     }
 
-    public int addSongRequest(String author, String url, String artist, String title) {
+    public AddResult addSongRequest(String author, String url, String artist, String title) {
         entries.computeIfAbsent(author, k -> new LinkedHashSet<>());
         scores.putIfAbsent(author, 0);
-        if (entries.get(author).size() >= songsPerPlayer) return 2;
+        if (entries.get(author).size() >= songsPerPlayer) return AddResult.FULL_LIST;
         SongEntry se = new SongEntry(url, author, cleanLight(artist.toLowerCase()), cleanTitle(title.toLowerCase()), artist + " - " + title);
-        return entries.get(author).add(se) ? 0 : 1;
+        return entries.get(author).add(se) ? AddResult.SUCCESS : AddResult.ALREADY_ADDED;
     }
 
-    public int removeSongRequest(String author, Integer index) {
+    public boolean removeSongRequest(String author, Integer index) {
         LinkedHashSet<SongEntry> entrySet = entries.get(author);
-        if (entrySet == null || entrySet.isEmpty() || entrySet.size() < index) return 1;
+        if (entrySet == null || entrySet.isEmpty() || entrySet.size() < index) return false;
         Iterator<SongEntry> it = entrySet.iterator();
         int i = 1;
         while (it.hasNext()) {
             it.next();
             if (i == index) {
                 it.remove();
-                return 0;
+                return true;
             }
             i++;
         }
-        return 1;
+        return false;
     }
 
     public boolean updateArtist(String author, Integer index, String artist) {

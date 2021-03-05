@@ -44,11 +44,10 @@ public class BTDMRemoveCmd extends BTDMCommand {
         if (blindTest.getLock()) commandEvent.reply("You can no longer change your submissions");
         else {
             String author = commandEvent.getMessage().getAuthor().getName();
-            Integer idx;
+            int idx;
             try {
-                idx = Integer.valueOf(commandEvent.getArgs());
-                int removeResult = blindTest.removeSongRequest(author, idx);
-                if (removeResult == 1) commandEvent.reply("Error : could not find any submission with that index");
+                idx = Integer.parseInt(commandEvent.getArgs());
+                if (!blindTest.removeSongRequest(author, idx)) commandEvent.reply("Error : could not find any submission with that index");
                 else {
                     commandEvent.reply("Song successfully removed");
                     List<String> lists = blindTest.getSongList(author);

@@ -23,6 +23,7 @@ import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTDMCommand;
 import com.sapher.youtubedl.YoutubeDL;
+import com.sapher.youtubedl.YoutubeDLException;
 import com.sapher.youtubedl.YoutubeDLRequest;
 import com.sapher.youtubedl.YoutubeDLResponse;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
@@ -69,12 +70,19 @@ public class BTDMAddCmd extends BTDMCommand {
             this.author = event.getMessage().getAuthor().getName();
         }
 
-        private int addSingleTrack(AudioTrack audioTrack) {
-            TrackInfo info = extractArtistAndTrack(audioTrack.getInfo().uri);
-            int addResult = blindTest.addSongRequest(author, audioTrack.getInfo().uri, info != null ? info.artist : BlindTest.DEFAULT, info != null ? info.track : BlindTest.DEFAULT);
+        private BlindTest.AddResult addSingleTrack(AudioTrack audioTrack) {
+            TrackInfo info = null;
+            BlindTest.AddResult addResult;
+            try {
+                info = extractArtistAndTrack(audioTrack.getInfo().uri);
+                addResult = blindTest.addSongRequest(author, audioTrack.getInfo().uri, info != null ? info.artist : BlindTest.DEFAULT, info != null ? info.track : BlindTest.DEFAULT);
+            } catch (Pegi18Exception e) {
+                addResult = BlindTest.AddResult.PEGI18;
+            }
             String reply = "Adding **" + audioTrack.getInfo().title + "** ... ";
-            if (addResult == 1) reply += ":no_entry_sign: This song has already been added";
-            else if (addResult == 2) reply += ":no_entry_sign: Maximum number of songs has been reached";
+            if (addResult == BlindTest.AddResult.ALREADY_ADDED) reply += ":no_entry_sign: This song has already been added";
+            else if (addResult == BlindTest.AddResult.FULL_LIST) reply += ":no_entry_sign: Maximum number of songs has been reached";
+            else if (addResult == BlindTest.AddResult.PEGI18) reply += ":no_entry_sign: This video is PEGI 18 and cannot be played";
             else reply += ":white_check_mark: Song successfully added" + (info == null ? " (:rotating_light: there might be an error in artist and/or title)" : "");
             event.reply(reply);
             return addResult;
@@ -96,7 +104,7 @@ public class BTDMAddCmd extends BTDMCommand {
         @Override
         public void playlistLoaded(AudioPlaylist audioPlaylist) {
             for (AudioTrack audioTrack : audioPlaylist.getTracks()) {
-                if (addSingleTrack(audioTrack) == 2) break;
+                if (addSingleTrack(audioTrack) == BlindTest.AddResult.FULL_LIST) break;
             }
             finalReply();
         }
@@ -112,7 +120,7 @@ public class BTDMAddCmd extends BTDMCommand {
         }
     }
 
-    private class TrackInfo {
+    private static class TrackInfo {
         String artist;
         String track;
 
@@ -122,7 +130,7 @@ public class BTDMAddCmd extends BTDMCommand {
         }
     }
 
-    private TrackInfo extractArtistAndTrack(String videoUrl) {
+    private TrackInfo extractArtistAndTrack(String videoUrl) throws Pegi18Exception {
         try {
             // Build request
             YoutubeDLRequest request = new YoutubeDLRequest(videoUrl);
@@ -138,13 +146,16 @@ public class BTDMAddCmd extends BTDMCommand {
             JsonParser parser = new JsonParser();
             JsonElement parsedTree = parser.parse(stdOut);
             JsonObject root = parsedTree.getAsJsonObject();
+            int ageLimit = root.get("age_limit").getAsInt();
+            if (ageLimit >= 18) throw new Pegi18Exception();
             String track = root.get("track").getAsString();
             String artist = root.get("artist").getAsString();
             return new TrackInfo(artist, track);
-        } catch (Exception ignored) {
+        } catch (RuntimeException | YoutubeDLException ignored) {
         }
 
         return null;
     }
 
+    static class Pegi18Exception extends Exception {}
 }
