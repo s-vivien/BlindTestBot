@@ -20,6 +20,7 @@ import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.audio.QueuedTrack;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
+import com.jagrosh.jmusicbot.blindtest.model.SongEntry;
 import com.jagrosh.jmusicbot.commands.DJCommand;
 import com.jagrosh.jmusicbot.listener.PropositionListener;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
@@ -74,7 +75,7 @@ public class BTNextCmd extends DJCommand {
 
         @Override
         public void trackLoaded(AudioTrack audioTrack) {
-            BlindTest.SongEntry songEntry = blindTest.getCurrentSongEntry();
+            SongEntry songEntry = blindTest.getCurrentSongEntry();
             AudioHandler handler = (AudioHandler) event.getGuild().getAudioManager().getSendingHandler();
             handler.setOnTrackEndLambda(() -> {
                 event.reply(blindTest.onTrackEnd());
@@ -89,6 +90,10 @@ public class BTNextCmd extends DJCommand {
                 return null;
             });
             handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor()));
+            if (blindTest.getCurrentSongEntry().getStartOffset() > 0) {
+                AudioTrack playingTrack = handler.getPlayer().getPlayingTrack();
+                playingTrack.setPosition(1000L * blindTest.getCurrentSongEntry().getStartOffset());
+            }
             event.reply("\uD83D\uDEA8 Submission " + blindTest.getDoneEntriesSize() + "/" + blindTest.getEntriesSize() + " from **" + songEntry.getOwner() + "** who cannot play during this round \uD83D\uDEA8 " + blindTest.whatsLeftToFind());
         }
 
