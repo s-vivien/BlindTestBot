@@ -111,7 +111,7 @@ public class BTDMAddCmd extends BTDMCommand {
 
         @Override
         public void noMatches() {
-            event.reply("Wrong parameter..");
+            event.reply("Wrong parameter or invalid audio source..");
         }
 
         @Override

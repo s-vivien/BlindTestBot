@@ -37,8 +37,7 @@ public class PlayerManager extends DefaultAudioPlayerManager
     
     public void init()
     {
-        AudioSourceManagers.registerRemoteSources(this);
-        AudioSourceManagers.registerLocalSource(this);
+        this.registerSourceManager(new YoutubeAudioSourceManager(true));
         source(YoutubeAudioSourceManager.class).setPlaylistPageCount(10);
     }
     
