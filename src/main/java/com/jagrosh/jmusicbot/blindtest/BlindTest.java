@@ -1,6 +1,7 @@
 package com.jagrosh.jmusicbot.blindtest;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import com.jagrosh.jmusicbot.BotConfig;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 
 public class BlindTest {
 
-    private Gson GSON = new Gson();
+    private Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final String DEFAULT = "N/A";
     private static final String AUTOBACKUP_NAME = "AUTO";
     private static final String EMOJI = ":fire:";
