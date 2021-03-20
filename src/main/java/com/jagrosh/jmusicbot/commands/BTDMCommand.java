@@ -15,18 +15,16 @@
  */
 package com.jagrosh.jmusicbot.commands;
 
-import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jmusicbot.Bot;
+import com.jagrosh.jmusicbot.blindtest.BlindTest;
 
 /**
  * @author John Grosh (john.a.grosh@gmail.com)
  */
-public abstract class BTDMCommand extends Command {
+public abstract class BTDMCommand extends BTCommand {
 
-    protected Bot bot;
-
-    public BTDMCommand(Bot bot) {
-        this.bot = bot;
+    public BTDMCommand(Bot bot, BlindTest blindTest) {
+        super(bot, blindTest);
         this.category = new Category("Blind-Test DM", event -> !event.getMessage().isFromGuild());
     }
 }

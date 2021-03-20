@@ -39,7 +39,7 @@ public class SongEntry {
 
     @Override
     public String toString() {
-        String str = "<" + url + "> artist=[" + artist + "] title=[" + title + "]";
+        String str = "<" + url + (startOffset > 0 ? "&t=" + startOffset : "") + "> artist=[" + artist + "] title=[" + title + "]";
         if (!extras.isEmpty()) {
             for (int j = 0; j < extras.size(); j++) str += " extra" + (j + 1) + "=[" + extras.get(j) + "]";
         }

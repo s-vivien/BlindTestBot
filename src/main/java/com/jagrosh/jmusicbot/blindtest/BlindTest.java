@@ -300,6 +300,13 @@ public class BlindTest {
         return true;
     }
 
+    public boolean setOffset(String author, Integer index, Integer offset) {
+        SongEntry e = getEntryByIndex(author, index);
+        if (e == null) return false;
+        e.setStartOffset(offset);
+        return true;
+    }
+
     public boolean everyAnswerFound() {
         if (!trackFound || !artistFound) return false;
         for (int i = 0; i < currentSongEntry.getExtras().size(); i++) {

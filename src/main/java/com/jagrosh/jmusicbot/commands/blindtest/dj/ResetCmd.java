@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 John Grosh <john.a.grosh@gmail.com>.
+ * Copyright 2016 John Grosh <john.a.grosh@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,29 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jagrosh.jmusicbot.commands.owner;
+package com.jagrosh.jmusicbot.commands.blindtest.dj;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.Bot;
-import com.jagrosh.jmusicbot.commands.OwnerCommand;
+import com.jagrosh.jmusicbot.blindtest.BlindTest;
+import com.jagrosh.jmusicbot.commands.BTDJCommand;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class ShutdownCmd extends OwnerCommand {
-    private final Bot bot;
+public class ResetCmd extends BTDJCommand {
 
-    public ShutdownCmd(Bot bot) {
-        this.bot = bot;
-        this.name = "shutdown";
-        this.help = "safely shuts down";
-        this.aliases = bot.getConfig().getAliases(this.name);
-        this.guildOnly = false;
+    public ResetCmd(Bot bot, BlindTest blindTest) {
+        super(bot, blindTest, false);
+        this.name = "reset";
+        this.help = "resets the whole state of the blind-test";
+        this.guildOnly = true;
     }
 
     @Override
-    protected void execute(CommandEvent event) {
-        event.replyWarning("Shutting down...");
-        bot.shutdown();
+    public void doCommand(CommandEvent event) {
+        blindTest.reset();
+        event.reply(":recycle: Game successfully reset !");
     }
 }

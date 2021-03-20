@@ -21,10 +21,12 @@ import com.jagrosh.jmusicbot.blindtest.BlindTest;
 /**
  * @author John Grosh (john.a.grosh@gmail.com)
  */
-public abstract class BTPublicCommand extends BTCommand {
+public abstract class BTCommand extends MusicCommand {
 
-    public BTPublicCommand(Bot bot, BlindTest blindTest) {
-        super(bot, blindTest);
-        this.category = new Category("Blind-Test public");
+    protected final BlindTest blindTest;
+
+    public BTCommand(Bot bot, BlindTest blindTest) {
+        super(bot);
+        this.blindTest = blindTest;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 John Grosh <john.a.grosh@gmail.com>.
+ * Copyright 2016 John Grosh <john.a.grosh@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jagrosh.jmusicbot.commands;
+package com.jagrosh.jmusicbot.commands.blindtest.pub;
 
+import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
+import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 
 /**
- * @author John Grosh (john.a.grosh@gmail.com)
+ * @author John Grosh <john.a.grosh@gmail.com>
  */
-public abstract class BTPublicCommand extends BTCommand {
+public class PoolCmd extends BTPublicCommand {
 
-    public BTPublicCommand(Bot bot, BlindTest blindTest) {
+    public PoolCmd(Bot bot, BlindTest blindTest) {
         super(bot, blindTest);
-        this.category = new Category("Blind-Test public");
+        this.name = "pool";
+        this.help = "prints the song pool";
+        this.guildOnly = true;
+    }
+
+    @Override
+    public void doCommand(CommandEvent event) {
+        event.reply(blindTest.getSongPool());
     }
 }

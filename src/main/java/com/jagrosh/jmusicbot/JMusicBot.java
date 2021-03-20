@@ -18,10 +18,15 @@ package com.jagrosh.jmusicbot;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
-import com.jagrosh.jmusicbot.commands.admin.SetdjCmd;
-import com.jagrosh.jmusicbot.commands.blindtest.*;
-import com.jagrosh.jmusicbot.commands.dj.*;
-import com.jagrosh.jmusicbot.commands.owner.EvalCmd;
+import com.jagrosh.jmusicbot.commands.owner.SetdjCmd;
+import com.jagrosh.jmusicbot.commands.owner.SettcCmd;
+import com.jagrosh.jmusicbot.commands.blindtest.dj.*;
+import com.jagrosh.jmusicbot.commands.blindtest.dm.*;
+import com.jagrosh.jmusicbot.commands.blindtest.pub.PlaylistCmd;
+import com.jagrosh.jmusicbot.commands.blindtest.pub.PoolCmd;
+import com.jagrosh.jmusicbot.commands.blindtest.pub.RulesCmd;
+import com.jagrosh.jmusicbot.commands.blindtest.pub.ScoreboardCmd;
+import com.jagrosh.jmusicbot.commands.owner.*;
 import com.jagrosh.jmusicbot.entities.Prompt;
 import com.jagrosh.jmusicbot.gui.GUI;
 import com.jagrosh.jmusicbot.listener.PropositionListener;
@@ -36,7 +41,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.jagrosh.jmusicbot.commands.CustomCommandClientBuilder;
+import com.jagrosh.jmusicbot.commands.SingleChannelCommandClientBuilder;
 
 import javax.security.auth.login.LoginException;
 import java.util.Arrays;
@@ -86,7 +91,7 @@ public class JMusicBot {
         PropositionListener propositionListener = new PropositionListener();
 
         // set up the command client
-        CommandClientBuilder cb = new CustomCommandClientBuilder()
+        CommandClientBuilder cb = new SingleChannelCommandClientBuilder()
                 .setBlindTestChannel(config.getBlindTestChannel())
                 .setPrefix(config.getPrefix())
                 .setListener(propositionListener)
@@ -97,64 +102,37 @@ public class JMusicBot {
                 .setLinkedCacheSize(200)
                 .setGuildSettingsManager(settings)
                 .addCommands(
-                        new BTDMAddCmd(bot, blindTest),
-                        new BTDMListCmd(bot, blindTest),
-                        new BTDMSetTitleCmd(bot, blindTest),
-                        new BTDMSetArtistCmd(bot, blindTest),
-                        new BTDMAddExtraCmd(bot, blindTest),
-                        new BTDMRemoveExtraCmd(bot, blindTest),
-                        new BTDMRemoveCmd(bot, blindTest),
-                        new BTPublicRulesCmd(blindTest, config.getHelp(), config.getMaximumExtrasNumber()),
-                        new BTPublicPoolCmd(blindTest),
-                        new BTPublicPlaylistCmd(blindTest),
-                        new BTPublicScoreboardCmd(blindTest),
-                        new BTResetCmd(blindTest),
-                        new BTLimitCmd(blindTest),
-                        new BTBackupCmd(blindTest),
-                        new BTAddPointCmd(blindTest),
-                        new BTRestoreCmd(blindTest),
-                        new BTLockPoolCmd(blindTest),
-                        new BTNextCmd(bot, blindTest, propositionListener),
-                        //                        new PingCommand(),
-                        //                        new SettingsCmd(bot),
-                        //
-                        //                        new LyricsCmd(bot),
-                        //                        new NowplayingCmd(bot),
-                        new PlayCmd(bot),
-                        //                        new PlaylistsCmd(bot),
-                        //                        new QueueCmd(bot),
-                        //                        new RemoveCmd(bot),
-                        //                        new SearchCmd(bot),
-                        //                        new SCSearchCmd(bot),
-                        //                        new ShuffleCmd(bot),
-                        //                        new SkipCmd(bot),
-                        //
-                        //                        new ForceRemoveCmd(bot),
-                        //                        new ForceskipCmd(bot),
-                        //                        new MoveTrackCmd(bot),
-                        new PauseCmd(bot),
-                        //                        new PlaynextCmd(bot),
-                        //                        new RepeatCmd(bot),
-                        //                        new SkiptoCmd(bot),
-                        new VolumeCmd(bot),
+                        new NextCmd(bot, blindTest, propositionListener),
                         new StopCmd(bot, blindTest),
-                        //                        new PrefixCmd(bot),
-                        new SetdjCmd(bot)
-                        //                        new SettcCmd(bot),
-                        //                        new SetvcCmd(bot),
-                        //
-                        //                        new AutoplaylistCmd(bot),
-                        //                        new DebugCmd(bot),
-                        //                        new PlaylistCmd(bot),
-                        //                        new SetavatarCmd(bot),
-                        //                        new SetgameCmd(bot),
-                        //                        new SetnameCmd(bot),
-                        //                        new SetstatusCmd(bot),
-                        //                        new ShutdownCmd(bot)
+                        new PlayCmd(bot, blindTest),
+                        new PauseCmd(bot, blindTest),
+                        new AddPointCmd(bot, blindTest),
+                        new LimitCmd(bot, blindTest),
+                        new LockPoolCmd(bot, blindTest),
+                        new ResetCmd(bot, blindTest),
+                        new RestoreCmd(bot, blindTest),
+                        new BackupCmd(bot, blindTest),
+                        new VolumeCmd(bot, blindTest),
+                        new AddEntryCmd(bot, blindTest),
+                        new RemoveEntryCmd(bot, blindTest),
+                        new SetEntryArtistCmd(bot, blindTest),
+                        new SetEntryStart(bot, blindTest),
+                        new SetEntryTitleCmd(bot, blindTest),
+                        new ListEntriesCmd(bot, blindTest),
+                        new AddExtraCmd(bot, blindTest),
+                        new RemoveExtraCmd(bot, blindTest),
+                        new PoolCmd(bot, blindTest),
+                        new ScoreboardCmd(bot, blindTest),
+                        new RulesCmd(bot, blindTest, config.getHelp(), config.getMaximumExtrasNumber()),
+                        new PlaylistCmd(bot, blindTest),
+                        new SetdjCmd(bot),
+                        new SettcCmd(bot),
+                        new DebugCmd(bot),
+                        new SetavatarCmd(bot),
+                        new SetnameCmd(bot),
+                        new ShutdownCmd(bot)
                 );
 
-        if (config.useEval())
-            cb.addCommand(new EvalCmd(bot));
         boolean nogame = false;
         if (config.getStatus() != OnlineStatus.UNKNOWN)
             cb.setStatus(config.getStatus());

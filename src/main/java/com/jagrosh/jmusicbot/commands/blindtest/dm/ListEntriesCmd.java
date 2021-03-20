@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 John Grosh <john.a.grosh@gmail.com>.
+ * Copyright 2016 John Grosh <john.a.grosh@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,29 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jagrosh.jmusicbot.commands.owner;
+package com.jagrosh.jmusicbot.commands.blindtest.dm;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.Bot;
-import com.jagrosh.jmusicbot.commands.OwnerCommand;
+import com.jagrosh.jmusicbot.blindtest.BlindTest;
+import com.jagrosh.jmusicbot.commands.BTDMCommand;
+
+import java.util.List;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
  */
-public class ShutdownCmd extends OwnerCommand {
-    private final Bot bot;
+public class ListEntriesCmd extends BTDMCommand {
 
-    public ShutdownCmd(Bot bot) {
-        this.bot = bot;
-        this.name = "shutdown";
-        this.help = "safely shuts down";
+    public ListEntriesCmd(Bot bot, BlindTest blindTest) {
+        super(bot, blindTest);
+        this.name = "list";
+        this.help = "list the added songs";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.guildOnly = false;
     }
 
     @Override
-    protected void execute(CommandEvent event) {
-        event.replyWarning("Shutting down...");
-        bot.shutdown();
+    public void doCommand(CommandEvent commandEvent) {
+        String author = commandEvent.getMessage().getAuthor().getName();
+        List<String> lists = blindTest.getSongList(author);
+        for (String list : lists) {
+            commandEvent.reply(list);
+        }
     }
+
 }
