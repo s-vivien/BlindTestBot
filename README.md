@@ -9,5 +9,9 @@ There are commands to see the scoreboard, the state of the pool, make/restore a 
 
 ## Setup
 
+⚠ **The bot should be installed on a single server**. Multi-server handling is under development ...
+
 [Youtube-DL](https://youtube-dl.org/) must be present in the PATH for the metadata scrapping to work correctly   
-The setup process can be found [here](https://github.com/jagrosh/MusicBot/wiki/Setup)
+
+The setup process is the same as MusicBot, and can be found [here](https://github.com/jagrosh/MusicBot/wiki/Setup)  
+The only differences are that you must use the BlindTestBot JAR, and the configuration file must contain some extra parameters (see [config reference](src/main/resources/reference.conf))

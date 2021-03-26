@@ -18,8 +18,6 @@ package com.jagrosh.jmusicbot;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
-import com.jagrosh.jmusicbot.commands.owner.SetdjCmd;
-import com.jagrosh.jmusicbot.commands.owner.SettcCmd;
 import com.jagrosh.jmusicbot.commands.blindtest.dj.*;
 import com.jagrosh.jmusicbot.commands.blindtest.dm.*;
 import com.jagrosh.jmusicbot.commands.blindtest.pub.PlaylistCmd;
@@ -41,7 +39,6 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.jagrosh.jmusicbot.commands.SingleChannelCommandClientBuilder;
 
 import javax.security.auth.login.LoginException;
 import java.util.Arrays;
@@ -91,8 +88,7 @@ public class JMusicBot {
         PropositionListener propositionListener = new PropositionListener();
 
         // set up the command client
-        CommandClientBuilder cb = new SingleChannelCommandClientBuilder()
-                .setBlindTestChannel(config.getBlindTestChannel())
+        CommandClientBuilder cb = new CommandClientBuilder()
                 .setPrefix(config.getPrefix())
                 .setListener(propositionListener)
                 .setAlternativePrefix(config.getAltPrefix())
@@ -112,7 +108,6 @@ public class JMusicBot {
                         new ResetCmd(bot, blindTest),
                         new RestoreCmd(bot, blindTest),
                         new BackupCmd(bot, blindTest),
-                        new VolumeCmd(bot, blindTest),
                         new AddEntryCmd(bot, blindTest),
                         new RemoveEntryCmd(bot, blindTest),
                         new SetEntryArtistCmd(bot, blindTest),
@@ -180,5 +175,6 @@ public class JMusicBot {
                                                           + "invalid: " + ex + "\nConfig Location: " + config.getConfigLocation());
             System.exit(1);
         }
+        blindTest.restoreState("AUTO");
     }
 }

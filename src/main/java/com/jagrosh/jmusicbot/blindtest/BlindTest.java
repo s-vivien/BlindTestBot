@@ -71,7 +71,7 @@ public class BlindTest {
         List<String> data = new ArrayList<>();
         List<String> ytIds = getFlatEntries().stream().filter(SongEntry::isDone).map(SongEntry::getYtId).collect(Collectors.toList());
         if (!ytIds.isEmpty()) {
-            data.add("YT playlist(s) of the " + ytIds.size() + " already played songs :");
+            data.add("Temporary Youtube playlist(s) of the " + ytIds.size() + " already played songs (:warning: will expire in a few hours) :");
             for (int i = 0; i < ytIds.size(); i += 50) {
                 String longUrl = "http://www.youtube.com/watch_videos?video_ids=" + String.join(",", ytIds.subList(i, Math.min(i + 50, ytIds.size())));
                 // Call YT to get the short playlist link
