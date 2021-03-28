@@ -1,4 +1,4 @@
-package com.jagrosh.jmusicbot.listener;
+package com.jagrosh.jmusicbot.blindtest;
 
 import com.jagrosh.jdautilities.command.CommandListener;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;

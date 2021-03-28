@@ -20,9 +20,6 @@ import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 
-/**
- * @author John Grosh <john.a.grosh@gmail.com>
- */
 public class ScoreboardCmd extends BTPublicCommand {
 
     public ScoreboardCmd(Bot bot, BlindTest blindTest) {

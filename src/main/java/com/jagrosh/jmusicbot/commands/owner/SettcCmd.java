@@ -46,7 +46,7 @@ public class SettcCmd extends OwnerCommand {
         Settings s = event.getClient().getSettingsFor(event.getGuild());
         if (event.getArgs().equalsIgnoreCase("none")) {
             s.setTextChannel(null);
-            event.reply(event.getClient().getSuccess() + " Music commands can now be used in any channel");
+            event.reply(event.getClient().getSuccess() + " Blind-Test commands can now be used in any channel");
         } else {
             List<TextChannel> list = FinderUtil.findTextChannels(event.getArgs(), event.getGuild());
             if (list.isEmpty())
@@ -55,7 +55,7 @@ public class SettcCmd extends OwnerCommand {
                 event.reply(event.getClient().getWarning() + FormatUtil.listOfTChannels(list, event.getArgs()));
             else {
                 s.setTextChannel(list.get(0));
-                event.reply(event.getClient().getSuccess() + " Music commands can now only be used in <#" + list.get(0).getId() + ">");
+                event.reply(event.getClient().getSuccess() + " Blind-Test commands can now only be used in <#" + list.get(0).getId() + ">");
             }
         }
     }

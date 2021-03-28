@@ -21,9 +21,6 @@ import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTDJCommand;
 
-/**
- * @author John Grosh <john.a.grosh@gmail.com>
- */
 public class StopCmd extends BTDJCommand {
 
     public StopCmd(Bot bot, BlindTest blindTest) {

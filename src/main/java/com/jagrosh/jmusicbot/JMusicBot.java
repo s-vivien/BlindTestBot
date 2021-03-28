@@ -27,7 +27,7 @@ import com.jagrosh.jmusicbot.commands.blindtest.pub.ScoreboardCmd;
 import com.jagrosh.jmusicbot.commands.owner.*;
 import com.jagrosh.jmusicbot.entities.Prompt;
 import com.jagrosh.jmusicbot.gui.GUI;
-import com.jagrosh.jmusicbot.listener.PropositionListener;
+import com.jagrosh.jmusicbot.blindtest.PropositionListener;
 import com.jagrosh.jmusicbot.settings.SettingsManager;
 import com.jagrosh.jmusicbot.utils.OtherUtil;
 import net.dv8tion.jda.api.JDA;

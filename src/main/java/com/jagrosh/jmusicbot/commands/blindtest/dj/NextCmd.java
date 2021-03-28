@@ -20,17 +20,14 @@ import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.audio.QueuedTrack;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
+import com.jagrosh.jmusicbot.blindtest.PropositionListener;
 import com.jagrosh.jmusicbot.blindtest.model.SongEntry;
 import com.jagrosh.jmusicbot.commands.BTDJCommand;
-import com.jagrosh.jmusicbot.listener.PropositionListener;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
-/**
- * @author John Grosh <john.a.grosh@gmail.com>
- */
 public class NextCmd extends BTDJCommand {
 
     private PropositionListener propositionListener;

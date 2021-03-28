@@ -20,7 +20,6 @@ import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.audio.NowplayingHandler;
 import com.jagrosh.jmusicbot.audio.PlayerManager;
 import com.jagrosh.jmusicbot.gui.GUI;
-import com.jagrosh.jmusicbot.playlist.PlaylistLoader;
 import com.jagrosh.jmusicbot.settings.SettingsManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
@@ -41,7 +40,6 @@ public class Bot
     private final BotConfig config;
     private final SettingsManager settings;
     private final PlayerManager players;
-    private final PlaylistLoader playlists;
     private final NowplayingHandler nowplaying;
     
     private boolean shuttingDown = false;
@@ -53,7 +51,6 @@ public class Bot
         this.waiter = waiter;
         this.config = config;
         this.settings = settings;
-        this.playlists = new PlaylistLoader(config);
         this.threadpool = Executors.newSingleThreadScheduledExecutor();
         this.players = new PlayerManager(this);
         this.players.init();
@@ -84,11 +81,6 @@ public class Bot
     public PlayerManager getPlayerManager()
     {
         return players;
-    }
-    
-    public PlaylistLoader getPlaylistLoader()
-    {
-        return playlists;
     }
     
     public NowplayingHandler getNowplayingHandler()

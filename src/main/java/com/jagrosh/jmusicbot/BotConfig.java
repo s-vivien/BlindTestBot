@@ -39,9 +39,8 @@ public class BotConfig {
     private final static String END_TOKEN = "/// END OF JMUSICBOT CONFIG ///";
 
     private Path path = null;
-    private String token, prefix, altprefix, helpWord, playlistsFolder,
-            successEmoji, warningEmoji, errorEmoji, loadingEmoji, searchingEmoji, backupPath;
-    private boolean stayInChannel, songInGame, npImages, updatealerts, useEval, dbots;
+    private String token, prefix, altprefix, helpWord, successEmoji, warningEmoji, errorEmoji, loadingEmoji, backupPath;
+    private boolean stayInChannel, songInGame, npImages, dbots;
     private long owner, maxSeconds;
     private int songsPerPlayer, maximumExtrasNumber;
     private OnlineStatus status;
@@ -82,16 +81,12 @@ public class BotConfig {
             warningEmoji = config.getString("warning");
             errorEmoji = config.getString("error");
             loadingEmoji = config.getString("loading");
-            searchingEmoji = config.getString("searching");
             game = OtherUtil.parseGame(config.getString("game"));
             status = OtherUtil.parseStatus(config.getString("status"));
             stayInChannel = config.getBoolean("stayinchannel");
             songInGame = config.getBoolean("songinstatus");
             npImages = config.getBoolean("npimages");
-            updatealerts = config.getBoolean("updatealerts");
-            useEval = config.getBoolean("eval");
             maxSeconds = config.getLong("maxtime");
-            playlistsFolder = config.getString("playlistsfolder");
             aliases = config.getConfig("aliases");
             dbots = owner == 113156185389092864L;
             songsPerPlayer = config.getInt("songsPerPlayer");
@@ -203,10 +198,6 @@ public class BotConfig {
         return loadingEmoji;
     }
 
-    public String getSearching() {
-        return searchingEmoji;
-    }
-
     public Activity getGame() {
         return game;
     }
@@ -227,20 +218,8 @@ public class BotConfig {
         return songInGame;
     }
 
-    public String getPlaylistsFolder() {
-        return playlistsFolder;
-    }
-
     public boolean getDBots() {
         return dbots;
-    }
-
-    public boolean useUpdateAlerts() {
-        return updatealerts;
-    }
-
-    public boolean useEval() {
-        return useEval;
     }
 
     public boolean useNPImages() {

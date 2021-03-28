@@ -22,9 +22,6 @@ import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 
 import java.util.List;
 
-/**
- * @author John Grosh <john.a.grosh@gmail.com>
- */
 public class PlaylistCmd extends BTPublicCommand {
 
     public PlaylistCmd(Bot bot, BlindTest blindTest) {

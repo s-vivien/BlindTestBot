@@ -22,9 +22,6 @@ import com.jagrosh.jmusicbot.settings.Settings;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Role;
 
-/**
- * @author John Grosh (john.a.grosh@gmail.com)
- */
 public abstract class BTDJCommand extends BTCommand {
 
     public BTDJCommand(Bot bot, BlindTest blindTest, boolean allowCurrentEntryAuthor) {

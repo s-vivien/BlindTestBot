@@ -22,9 +22,6 @@ import com.jagrosh.jmusicbot.commands.BTDMCommand;
 
 import java.util.List;
 
-/**
- * @author John Grosh <john.a.grosh@gmail.com>
- */
 public class ListEntriesCmd extends BTDMCommand {
 
     public ListEntriesCmd(Bot bot, BlindTest blindTest) {

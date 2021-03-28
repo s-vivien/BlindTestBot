@@ -20,9 +20,6 @@ import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTDJCommand;
 
-/**
- * @author John Grosh <john.a.grosh@gmail.com>
- */
 public class LimitCmd extends BTDJCommand {
 
     public LimitCmd(Bot bot, BlindTest blindTest) {

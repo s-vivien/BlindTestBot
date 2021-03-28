@@ -37,9 +37,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author John Grosh <john.a.grosh@gmail.com>
- */
 public class AddEntryCmd extends BTDMCommand {
 
     public AddEntryCmd(Bot bot, BlindTest blindTest) {

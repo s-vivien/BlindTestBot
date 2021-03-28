@@ -20,9 +20,6 @@ import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTDJCommand;
 
-/**
- * @author John Grosh <john.a.grosh@gmail.com>
- */
 public class AddPointCmd extends BTDJCommand {
 
     public AddPointCmd(Bot bot, BlindTest blindTest) {
@@ -47,7 +44,7 @@ public class AddPointCmd extends BTDJCommand {
                 event.reply("Unknown player..");
             }
         } catch (Exception e) {
-            event.reply("Invalid parameters, expected les" + arguments);
+            event.reply("Invalid parameters, expected " + arguments);
         }
     }
 }
