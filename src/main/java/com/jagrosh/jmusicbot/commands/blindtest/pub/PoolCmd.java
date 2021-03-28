@@ -31,6 +31,6 @@ public class PoolCmd extends BTPublicCommand {
 
     @Override
     public void doCommand(CommandEvent event) {
-        event.reply(blindTest.getSongPool());
+        blindTest.printSongPool();
     }
 }

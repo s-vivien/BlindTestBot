@@ -104,7 +104,6 @@ public class PlayCmd extends BTDJCommand {
 
         @Override
         public void noMatches() {
-            //            m.editMessage("Topkek").queue(); //TODO
             m.editMessage(event.getClient().getError() + " Error loading track.").queue();
         }
 

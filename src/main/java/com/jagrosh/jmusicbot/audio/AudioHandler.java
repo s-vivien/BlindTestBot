@@ -129,7 +129,7 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler 
         } else return null;
     }
 
-    public Message getNoMusicPlaying(JDA jda) { // TODO
+    public Message getNoMusicPlaying(JDA jda) {
         Guild guild = guild(jda);
         return new MessageBuilder()
                 .setContent(FormatUtil.filter(manager.getBot().getConfig().getSuccess() + " **Now Playing...**"))
@@ -140,7 +140,7 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler 
                         .build()).build();
     }
 
-    public String getTopicFormat(JDA jda) { // TODO
+    public String getTopicFormat(JDA jda) {
         if (isMusicPlaying(jda)) {
             long userid = getRequester();
             AudioTrack track = audioPlayer.getPlayingTrack();

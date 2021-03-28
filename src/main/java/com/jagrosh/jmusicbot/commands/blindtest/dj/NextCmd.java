@@ -20,8 +20,6 @@ import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.audio.QueuedTrack;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
-import com.jagrosh.jmusicbot.blindtest.PropositionListener;
-import com.jagrosh.jmusicbot.blindtest.model.SongEntry;
 import com.jagrosh.jmusicbot.commands.BTDJCommand;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -30,11 +28,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 public class NextCmd extends BTDJCommand {
 
-    private PropositionListener propositionListener;
-
-    public NextCmd(Bot bot, BlindTest blindTest, PropositionListener propositionListener) {
+    public NextCmd(Bot bot, BlindTest blindTest) {
         super(bot, blindTest, false);
-        this.propositionListener = propositionListener;
         this.name = "next";
         this.help = "picks a random next song for the blindtest";
         this.aliases = bot.getConfig().getAliases(this.name);
@@ -68,41 +63,30 @@ public class NextCmd extends BTDJCommand {
 
         @Override
         public void trackLoaded(AudioTrack audioTrack) {
-            SongEntry songEntry = blindTest.getCurrentSongEntry();
             AudioHandler handler = (AudioHandler) event.getGuild().getAudioManager().getSendingHandler();
-            handler.setOnTrackEndLambda(() -> {
-                event.reply(blindTest.onTrackEnd());
-                propositionListener.setOnPropositionLambda(null);
-            });
-            propositionListener.setOnPropositionLambda((author, prop) -> {
-                if (author.equalsIgnoreCase(songEntry.getOwner())) return null;
-                String reply = blindTest.onProposition(author, prop);
-                if (reply != null) {
-                    event.reply(reply + " " + blindTest.whatsLeftToFind());
-                }
-                return null;
-            });
+            handler.setOnTrackEndLambda(blindTest::onTrackEnd);
             handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor()));
             if (blindTest.getCurrentSongEntry().getStartOffset() > 0) {
                 AudioTrack playingTrack = handler.getPlayer().getPlayingTrack();
                 playingTrack.setPosition(1000L * blindTest.getCurrentSongEntry().getStartOffset());
             }
-            event.reply("\uD83D\uDEA8 Submission " + blindTest.getDoneEntriesSize() + "/" + blindTest.getEntriesSize() + " from **" + songEntry.getOwner() + "** who cannot play during this round \uD83D\uDEA8 " + blindTest.whatsLeftToFind());
+            event.reply("\uD83D\uDEA8 Submission " + blindTest.getDoneEntriesSize() + "/" + blindTest.getEntriesSize() + " from **" + blindTest.getCurrentSongEntry().getOwner() + "** who cannot play during this round \uD83D\uDEA8 " +
+                        blindTest.whatsLeftToFind());
         }
 
         @Override
         public void playlistLoaded(AudioPlaylist audioPlaylist) {
-            event.reply("Error 1");
+            event.reply("Error while loading next track");
         }
 
         @Override
         public void noMatches() {
-            event.reply("Error 2");
+            event.reply("Error while loading next track");
         }
 
         @Override
         public void loadFailed(FriendlyException e) {
-            event.reply("Error 3");
+            event.reply("Error while loading next track");
         }
     }
 

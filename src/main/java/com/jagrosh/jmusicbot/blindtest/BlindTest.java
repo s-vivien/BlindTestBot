@@ -4,11 +4,18 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
+import com.jagrosh.jdautilities.commons.utils.FinderUtil;
 import com.jagrosh.jmusicbot.BotConfig;
 import com.jagrosh.jmusicbot.blindtest.model.AddResult;
 import com.jagrosh.jmusicbot.blindtest.model.SongEntry;
 import com.jagrosh.jmusicbot.blindtest.model.TrackMetadata;
+import com.jagrosh.jmusicbot.settings.Settings;
+import com.jagrosh.jmusicbot.utils.FormatUtil;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -46,6 +53,7 @@ public class BlindTest {
     private ConcurrentHashMap<String, LinkedHashSet<SongEntry>> entries = new ConcurrentHashMap<>();
     private Map<String, Integer> scores = new HashMap<>();
     private boolean locked = false;
+    private TextChannel btChannel;
 
     private Integer songsPerPlayer;
     private Integer maximumExtrasNumber;
@@ -53,11 +61,11 @@ public class BlindTest {
 
     // Current song
     private SongEntry currentSongEntry = null;
+    private int maxDistCombo, maxDistArtist, maxDistTitle;
+    private int[] maxDistExtras;
     private boolean trackFound, artistFound;
     private boolean[] extrasFound;
     private int extrasYetToFind;
-    private int maxDistCombo, maxDistArtist, maxDistTitle;
-    private int[] maxDistExtras;
 
     public BlindTest(BotConfig cfg) {
         songsPerPlayer = cfg.getSongsPerPlayer();
@@ -65,32 +73,6 @@ public class BlindTest {
         maximumExtrasNumber = cfg.getMaximumExtrasNumber();
         extrasFound = new boolean[maximumExtrasNumber];
         maxDistExtras = new int[maximumExtrasNumber];
-    }
-
-    public List<String> getPoolPlaylists() {
-        List<String> data = new ArrayList<>();
-        List<String> ytIds = getFlatEntries().stream().filter(SongEntry::isDone).map(SongEntry::getYtId).collect(Collectors.toList());
-        if (!ytIds.isEmpty()) {
-            data.add("Temporary Youtube playlist(s) of the " + ytIds.size() + " already played songs (:warning: will expire in a few hours) :");
-            for (int i = 0; i < ytIds.size(); i += 50) {
-                String longUrl = "http://www.youtube.com/watch_videos?video_ids=" + String.join(",", ytIds.subList(i, Math.min(i + 50, ytIds.size())));
-                // Call YT to get the short playlist link
-                Request request = new Request.Builder()
-                        .url(longUrl)
-                        .get()
-                        .build();
-                try {
-                    Response response = client.newCall(request).execute();
-                    data.add("<" + response.request().url().toString() + ">");
-                } catch (IOException e) {
-                    // If an error occurs, discard the whole list ..
-                    data.clear();
-                    data.add("Error while creating YT playlist :angry:");
-                    break;
-                }
-            }
-        }
-        return data;
     }
 
     public void clearCurrentSong() {
@@ -110,9 +92,14 @@ public class BlindTest {
         return yetToFind;
     }
 
-    public String onProposition(String author, String proposition) {
-        if (currentSongEntry == null) return null;
-        if (artistFound && trackFound && extrasYetToFind == 0) return null;
+    public void onProposition(MessageReceivedEvent event) {
+        if (event.getChannel() != this.btChannel) return;
+        if (currentSongEntry == null) return;
+        if (artistFound && trackFound && extrasYetToFind == 0) return;
+
+        String author = event.getAuthor().getName();
+        if (author.equals(currentSongEntry.getOwner())) return;
+        String proposition = event.getMessage().getContentRaw();
 
         proposition = cleanLight(proposition);
 
@@ -122,15 +109,18 @@ public class BlindTest {
                 artistFound = true;
                 trackFound = true;
                 addScore(author, COMBO_SCORE);
-                return String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist and the title", currentSongEntry.getArtist() + "][" + currentSongEntry.getTitle(), COMBO_SCORE);
+                btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist and the title", currentSongEntry.getArtist() + "][" + currentSongEntry.getTitle(), COMBO_SCORE) + " " + whatsLeftToFind()).queue();
+                return;
             } else if (!artistFound) {
                 artistFound = true;
                 addScore(author, SINGLE_SCORE);
-                return String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist", currentSongEntry.getArtist(), SINGLE_SCORE);
+                btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist", currentSongEntry.getArtist(), SINGLE_SCORE) + " " + whatsLeftToFind()).queue();
+                return;
             } else if (!trackFound) {
                 trackFound = true;
                 addScore(author, SINGLE_SCORE);
-                return String.format(SUCCESS_REPLY_TEMPLATE, author, "the title", currentSongEntry.getTitle(), SINGLE_SCORE);
+                btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "the title", currentSongEntry.getTitle(), SINGLE_SCORE) + " " + whatsLeftToFind()).queue();
+                return;
             }
         }
 
@@ -139,7 +129,8 @@ public class BlindTest {
             if (artistAlone <= maxDistArtist || (proposition.contains(currentSongEntry.getArtist()) && proposition.length() <= INCLUDE_TOLERANCE * currentSongEntry.getArtist().length())) {
                 artistFound = true;
                 addScore(author, SINGLE_SCORE);
-                return String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist", currentSongEntry.getArtist(), SINGLE_SCORE);
+                btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist", currentSongEntry.getArtist(), SINGLE_SCORE) + " " + whatsLeftToFind()).queue();
+                return;
             }
         }
 
@@ -148,7 +139,8 @@ public class BlindTest {
             if (trackAlone <= maxDistTitle || (proposition.contains(currentSongEntry.getTitle()) && proposition.length() <= INCLUDE_TOLERANCE * currentSongEntry.getTitle().length())) {
                 trackFound = true;
                 addScore(author, SINGLE_SCORE);
-                return String.format(SUCCESS_REPLY_TEMPLATE, author, "the title", currentSongEntry.getTitle(), SINGLE_SCORE);
+                btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "the title", currentSongEntry.getTitle(), SINGLE_SCORE) + " " + whatsLeftToFind()).queue();
+                return;
             }
         }
 
@@ -161,12 +153,11 @@ public class BlindTest {
                     extrasFound[i] = true;
                     extrasYetToFind--;
                     addScore(author, SINGLE_SCORE);
-                    return String.format(SUCCESS_REPLY_TEMPLATE, author, "one extra", extra, SINGLE_SCORE);
+                    btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "one extra", extra, SINGLE_SCORE) + " " + whatsLeftToFind()).queue();
+                    return;
                 }
             }
         }
-
-        return null;
     }
 
     public void setSongsPerPlayer(Integer songsPerPlayer) {
@@ -192,7 +183,15 @@ public class BlindTest {
         return true;
     }
 
-    public String getSongPool() {
+    public int getEntriesSize() {
+        return entries.entrySet().stream().mapToInt(e -> e.getValue().size()).sum();
+    }
+
+    public int getDoneEntriesSize() {
+        return entries.entrySet().stream().mapToInt(e -> (int) e.getValue().stream().filter(s -> s.isDone()).count()).sum();
+    }
+
+    public void printSongPool() {
         backupState(AUTOBACKUP_NAME, false);
         String pool = "\uD83D\uDCBF Submission pool\n";
 
@@ -210,18 +209,40 @@ public class BlindTest {
             pool += "```";
         }
         pool += "**TOTAL** : " + total;
-        return pool;
+        btChannel.sendMessage(pool).queue();
     }
 
-    public int getEntriesSize() {
-        return entries.entrySet().stream().mapToInt(e -> e.getValue().size()).sum();
+    public void printPoolPlaylists() {
+        List<String> data = new ArrayList<>();
+        List<String> ytIds = getFlatEntries().stream().filter(SongEntry::isDone).map(SongEntry::getYtId).collect(Collectors.toList());
+        if (!ytIds.isEmpty()) {
+            data.add("Temporary Youtube playlist(s) of the " + ytIds.size() + " already played songs (:warning: will expire in a few hours) :");
+            for (int i = 0; i < ytIds.size(); i += 50) {
+                String longUrl = "http://www.youtube.com/watch_videos?video_ids=" + String.join(",", ytIds.subList(i, Math.min(i + 50, ytIds.size())));
+                // Call YT to get the short playlist link
+                Request request = new Request.Builder()
+                        .url(longUrl)
+                        .get()
+                        .build();
+                try {
+                    Response response = client.newCall(request).execute();
+                    data.add("<" + response.request().url().toString() + ">");
+                } catch (IOException e) {
+                    // If an error occurs, discard the whole list ..
+                    data.clear();
+                    data.add("Error while creating YT playlist :angry:");
+                    break;
+                }
+            }
+            for (String part : data) {
+                btChannel.sendMessage(part).queue();
+            }
+        } else {
+            btChannel.sendMessage("No song have been played so far :confused:").queue();
+        }
     }
 
-    public int getDoneEntriesSize() {
-        return entries.entrySet().stream().mapToInt(e -> (int) e.getValue().stream().filter(s -> s.isDone()).count()).sum();
-    }
-
-    public String getScoreBoard() {
+    public void printScoreBoard() {
         backupState(AUTOBACKUP_NAME, false);
         int doneEntrySize = getDoneEntriesSize();
 
@@ -238,7 +259,7 @@ public class BlindTest {
         }
         scoreboard += "```";
 
-        return scoreboard;
+        btChannel.sendMessage(scoreboard).queue();
     }
 
     public AddResult addSongRequest(String author, AudioTrack audioTrack, TrackMetadata trackMetadata, int startOffset) {
@@ -315,14 +336,14 @@ public class BlindTest {
         return true;
     }
 
-    public String onTrackEnd() {
+    public void onTrackEnd() {
         String reply = "⏳ The track was **[ " + currentSongEntry.getCompleteOriginalTitle() + " ]**";
         if (!trackFound && !artistFound && (currentSongEntry.getExtras().isEmpty() || currentSongEntry.getExtras().size() == extrasYetToFind)) {
             addScore(currentSongEntry.getOwner(), NOTFOUND_SCORE);
-            return reply + " and no one found it .. (" + NOTFOUND_SCORE + " for " + currentSongEntry.getOwner() + ")";
+            reply += " and no one found it .. (" + NOTFOUND_SCORE + " for " + currentSongEntry.getOwner() + ")";
         }
         clearCurrentSong();
-        return reply;
+        btChannel.sendMessage(reply).queue();
     }
 
     public List<String> getSongList(String nick) {
@@ -374,32 +395,6 @@ public class BlindTest {
         return previousScore;
     }
 
-    private void writeToFile(String path, String content, boolean checkIfExists) throws IOException {
-        Path p = Paths.get(path);
-        if (checkIfExists && p.toFile().exists()) throw new IllegalStateException();
-        try (BufferedWriter writer = Files.newBufferedWriter(p)) {
-            writer.write(content);
-        }
-    }
-
-    private String readFile(String path) throws IOException {
-        Path p = Paths.get(path);
-        if (!p.toFile().exists()) throw new IllegalStateException();
-        String content;
-        try (BufferedReader reader = Files.newBufferedReader(p)) {
-            String line;
-            content = "";
-            while ((line = reader.readLine()) != null) {
-                content += line + System.lineSeparator();
-            }
-        }
-        return content;
-    }
-
-    private String computeBackFilePath(String name) {
-        return backupPath + File.separator + name + ".json";
-    }
-
     public void reset() {
         clearCurrentSong();
         entries.clear();
@@ -434,6 +429,36 @@ public class BlindTest {
             return "Error while restoring the game state..";
         }
         return "Backup successfully restored !";
+    }
+
+    public void setBtChannel(TextChannel btChannel) {
+        this.btChannel = btChannel;
+    }
+
+    private void writeToFile(String path, String content, boolean checkIfExists) throws IOException {
+        Path p = Paths.get(path);
+        if (checkIfExists && p.toFile().exists()) throw new IllegalStateException();
+        try (BufferedWriter writer = Files.newBufferedWriter(p)) {
+            writer.write(content);
+        }
+    }
+
+    private String readFile(String path) throws IOException {
+        Path p = Paths.get(path);
+        if (!p.toFile().exists()) throw new IllegalStateException();
+        String content;
+        try (BufferedReader reader = Files.newBufferedReader(p)) {
+            String line;
+            content = "";
+            while ((line = reader.readLine()) != null) {
+                content += line + System.lineSeparator();
+            }
+        }
+        return content;
+    }
+
+    private String computeBackFilePath(String name) {
+        return backupPath + File.separator + name + ".json";
     }
 
     private SongEntry getEntryByIndex(String author, Integer index) {

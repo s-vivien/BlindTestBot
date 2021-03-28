@@ -18,6 +18,7 @@ package com.jagrosh.jmusicbot.commands.owner;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jdautilities.commons.utils.FinderUtil;
 import com.jagrosh.jmusicbot.Bot;
+import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.OwnerCommand;
 import com.jagrosh.jmusicbot.settings.Settings;
 import com.jagrosh.jmusicbot.utils.FormatUtil;
@@ -30,33 +31,32 @@ import java.util.List;
  */
 public class SettcCmd extends OwnerCommand {
 
-    public SettcCmd(Bot bot) {
+    private BlindTest blindTest;
+
+    public SettcCmd(Bot bot, BlindTest blindTest) {
+        this.blindTest = blindTest;
         this.name = "settc";
-        this.help = "sets the text channel for music commands";
-        this.arguments = "<channel|NONE>";
+        this.help = "sets the text channel for blind-test commands";
+        this.arguments = "<channel>";
         this.aliases = bot.getConfig().getAliases(this.name);
     }
 
     @Override
     protected void execute(CommandEvent event) {
         if (event.getArgs().isEmpty()) {
-            event.reply(event.getClient().getError() + " Please include a text channel or NONE");
+            event.reply(event.getClient().getError() + " Please include a text channel");
             return;
         }
         Settings s = event.getClient().getSettingsFor(event.getGuild());
-        if (event.getArgs().equalsIgnoreCase("none")) {
-            s.setTextChannel(null);
-            event.reply(event.getClient().getSuccess() + " Blind-Test commands can now be used in any channel");
-        } else {
-            List<TextChannel> list = FinderUtil.findTextChannels(event.getArgs(), event.getGuild());
-            if (list.isEmpty())
-                event.reply(event.getClient().getWarning() + " No Text Channels found matching \"" + event.getArgs() + "\"");
-            else if (list.size() > 1)
-                event.reply(event.getClient().getWarning() + FormatUtil.listOfTChannels(list, event.getArgs()));
-            else {
-                s.setTextChannel(list.get(0));
-                event.reply(event.getClient().getSuccess() + " Blind-Test commands can now only be used in <#" + list.get(0).getId() + ">");
-            }
+        List<TextChannel> list = FinderUtil.findTextChannels(event.getArgs(), event.getGuild());
+        if (list.isEmpty())
+            event.reply(event.getClient().getWarning() + " No Text Channels found matching \"" + event.getArgs() + "\"");
+        else if (list.size() > 1)
+            event.reply(event.getClient().getWarning() + FormatUtil.listOfTChannels(list, event.getArgs()));
+        else {
+            s.setTextChannel(list.get(0));
+            blindTest.setBtChannel(list.get(0));
+            event.reply(event.getClient().getSuccess() + " Blind-Test commands can now only be used in <#" + list.get(0).getId() + ">");
         }
     }
 

@@ -7,16 +7,16 @@ import java.util.function.BiFunction;
 
 public class PropositionListener implements CommandListener {
 
-    private BiFunction<String, String, Void> onPropositionLambda;
+    private final BlindTest blindTest;
 
-    public void setOnPropositionLambda(BiFunction<String, String, Void> onPropositionLambda) {
-        this.onPropositionLambda = onPropositionLambda;
+    public PropositionListener(BlindTest blindTest) {
+        this.blindTest = blindTest;
     }
 
     @Override
     public void onNonCommandMessage(MessageReceivedEvent event) {
-        if (event.getMessage().isFromGuild() && onPropositionLambda != null) {
-            onPropositionLambda.apply(event.getAuthor().getName(), event.getMessage().getContentRaw());
+        if (event.getMessage().isFromGuild()) {
+            blindTest.onProposition(event);
         }
     }
 

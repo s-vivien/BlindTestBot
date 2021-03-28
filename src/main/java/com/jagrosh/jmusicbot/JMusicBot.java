@@ -15,7 +15,10 @@
  */
 package com.jagrosh.jmusicbot;
 
+import com.jagrosh.jdautilities.command.CommandClient;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
+import com.jagrosh.jdautilities.command.impl.CommandClientImpl;
+import com.jagrosh.jdautilities.commons.utils.FinderUtil;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.blindtest.dj.*;
@@ -28,13 +31,17 @@ import com.jagrosh.jmusicbot.commands.owner.*;
 import com.jagrosh.jmusicbot.entities.Prompt;
 import com.jagrosh.jmusicbot.gui.GUI;
 import com.jagrosh.jmusicbot.blindtest.PropositionListener;
+import com.jagrosh.jmusicbot.settings.Settings;
 import com.jagrosh.jmusicbot.settings.SettingsManager;
+import com.jagrosh.jmusicbot.utils.FormatUtil;
 import com.jagrosh.jmusicbot.utils.OtherUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.slf4j.Logger;
@@ -42,6 +49,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author John Grosh (jagrosh)
@@ -66,9 +75,6 @@ public class JMusicBot {
         Prompt prompt = new Prompt("JMusicBot", "Switching to nogui mode. You can manually start in nogui mode by including the -Dnogui=true flag.",
                 "true".equalsIgnoreCase(System.getProperty("nogui", "false")));
 
-        // get and check latest version
-        String version = OtherUtil.checkVersion(prompt);
-
         // check for valid java version
         if (!System.getProperty("java.vm.name").contains("64"))
             prompt.alert(Prompt.Level.WARNING, "Java Version", "It appears that you may not be using a supported Java version. Please use 64-bit java.");
@@ -84,8 +90,9 @@ public class JMusicBot {
         SettingsManager settings = new SettingsManager();
         Bot bot = new Bot(waiter, config, settings);
 
+        // set up the blind-test instance
         BlindTest blindTest = new BlindTest(config);
-        PropositionListener propositionListener = new PropositionListener();
+        PropositionListener propositionListener = new PropositionListener(blindTest);
 
         // set up the command client
         CommandClientBuilder cb = new CommandClientBuilder()
@@ -98,7 +105,7 @@ public class JMusicBot {
                 .setLinkedCacheSize(200)
                 .setGuildSettingsManager(settings)
                 .addCommands(
-                        new NextCmd(bot, blindTest, propositionListener),
+                        new NextCmd(bot, blindTest),
                         new StopCmd(bot, blindTest),
                         new PlayCmd(bot, blindTest),
                         new PauseCmd(bot, blindTest),
@@ -121,7 +128,7 @@ public class JMusicBot {
                         new RulesCmd(bot, blindTest, config.getHelp(), config.getMaximumExtrasNumber()),
                         new PlaylistCmd(bot, blindTest),
                         new SetdjCmd(bot),
-                        new SettcCmd(bot),
+                        new SettcCmd(bot, blindTest),
                         new DebugCmd(bot),
                         new SetavatarCmd(bot),
                         new SetnameCmd(bot),
@@ -155,16 +162,36 @@ public class JMusicBot {
 
         // attempt to log in and start
         try {
+            CommandClient cmdClient = cb.build();
             JDA jda = JDABuilder.create(config.getToken(), Arrays.asList(INTENTS))
                     .enableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.VOICE_STATE)
                     .disableCache(CacheFlag.ACTIVITY, CacheFlag.CLIENT_STATUS, CacheFlag.EMOTE)
                     .setActivity(nogame ? null : Activity.playing("loading..."))
                     .setStatus(config.getStatus() == OnlineStatus.INVISIBLE || config.getStatus() == OnlineStatus.OFFLINE
                             ? OnlineStatus.INVISIBLE : OnlineStatus.DO_NOT_DISTURB)
-                    .addEventListeners(cb.build(), waiter, new Listener(bot))
+                    .addEventListeners(cmdClient, waiter, new Listener(bot))
                     .setBulkDeleteSplittingEnabled(true)
                     .build();
             bot.setJDA(jda);
+
+            // check single-server
+            jda.awaitStatus(JDA.Status.CONNECTED);
+            List<Guild> guilds = jda.getGuilds();
+            if (guilds.size() != 1) {
+                prompt.alert(Prompt.Level.ERROR, "JMusicBot", "The bot can not be installed on more than 1 server. It is currently on servers : " + guilds.stream().map(Guild::getName).collect(Collectors.joining(", ")));
+                System.exit(1);
+            }
+            // set up blind-test channel
+            Guild guild = guilds.get(0);
+            Settings s = cmdClient.getSettingsFor(guild);
+            TextChannel textChannel = s.getTextChannel(guild);
+            if (textChannel == null) {
+                List<TextChannel> channels = guild.getTextChannels();
+                textChannel = channels.get(0);
+                s.setTextChannel(textChannel);
+                textChannel.sendMessage("Blind-Test commands can now only be used in <#" + textChannel.getId() + ">").queue();
+            }
+            blindTest.setBtChannel(textChannel);
         } catch (LoginException ex) {
             prompt.alert(Prompt.Level.ERROR, "JMusicBot", ex + "\nPlease make sure you are "
                                                           + "editing the correct config.txt file, and that you have used the "
@@ -173,6 +200,9 @@ public class JMusicBot {
         } catch (IllegalArgumentException ex) {
             prompt.alert(Prompt.Level.ERROR, "JMusicBot", "Some aspect of the configuration is "
                                                           + "invalid: " + ex + "\nConfig Location: " + config.getConfigLocation());
+            System.exit(1);
+        } catch (InterruptedException e) {
+            prompt.alert(Prompt.Level.ERROR, "JMusicBot", "Error while awaiting for JDA to connect");
             System.exit(1);
         }
         blindTest.restoreState("AUTO");

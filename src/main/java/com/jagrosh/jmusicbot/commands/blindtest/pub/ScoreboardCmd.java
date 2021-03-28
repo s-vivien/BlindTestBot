@@ -31,6 +31,6 @@ public class ScoreboardCmd extends BTPublicCommand {
 
     @Override
     public void doCommand(CommandEvent event) {
-        event.reply(blindTest.getScoreBoard());
+        blindTest.printScoreBoard();
     }
 }

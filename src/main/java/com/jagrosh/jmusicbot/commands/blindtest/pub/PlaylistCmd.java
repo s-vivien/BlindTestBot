@@ -20,8 +20,6 @@ import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.blindtest.BlindTest;
 import com.jagrosh.jmusicbot.commands.BTPublicCommand;
 
-import java.util.List;
-
 public class PlaylistCmd extends BTPublicCommand {
 
     public PlaylistCmd(Bot bot, BlindTest blindTest) {
@@ -33,13 +31,6 @@ public class PlaylistCmd extends BTPublicCommand {
 
     @Override
     public void doCommand(CommandEvent event) {
-        List<String> playlistUrls = blindTest.getPoolPlaylists();
-        if (playlistUrls.isEmpty()) {
-            event.reply("No song have been played so far :confused:");
-        } else {
-            for (String url : playlistUrls) {
-                event.reply(url);
-            }
-        }
+        blindTest.printPoolPlaylists();
     }
 }
