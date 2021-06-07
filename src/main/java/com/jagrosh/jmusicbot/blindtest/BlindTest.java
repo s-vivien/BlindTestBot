@@ -25,6 +25,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -214,8 +215,9 @@ public class BlindTest {
 
     public void printPoolPlaylists() {
         List<String> data = new ArrayList<>();
-        List<String> ytIds = getFlatEntries().stream().filter(SongEntry::isDone).map(SongEntry::getYtId).collect(Collectors.toList());
-        if (!ytIds.isEmpty()) {
+        List<SongEntry> doneEntries = getFlatEntries().stream().filter(SongEntry::isDone).collect(Collectors.toList());
+        if (!doneEntries.isEmpty()) {
+            List<String> ytIds = doneEntries.stream().map(SongEntry::getYtId).collect(Collectors.toList());
             data.add("Temporary Youtube playlist(s) of the " + ytIds.size() + " already played songs (:warning: will expire in a few hours) :");
             for (int i = 0; i < ytIds.size(); i += 50) {
                 String longUrl = "http://www.youtube.com/watch_videos?video_ids=" + String.join(",", ytIds.subList(i, Math.min(i + 50, ytIds.size())));
@@ -237,6 +239,10 @@ public class BlindTest {
             for (String part : data) {
                 btChannel.sendMessage(part).queue();
             }
+            btChannel.sendFile(doneEntries.stream()
+                    .map(e -> e.getUrl() + " - " + e.getCompleteOriginalTitle())
+                    .collect(Collectors.joining("\n"))
+                    .getBytes(StandardCharsets.UTF_8), "tracklist_" + new Date().toString() + ".txt").queue();
         } else {
             btChannel.sendMessage("No song have been played so far :confused:").queue();
         }
