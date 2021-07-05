@@ -25,6 +25,9 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.managers.AudioManager;
 
 public class NextCmd extends BTDJCommand {
 
@@ -63,9 +66,18 @@ public class NextCmd extends BTDJCommand {
 
         @Override
         public void trackLoaded(AudioTrack audioTrack) {
-            AudioHandler handler = (AudioHandler) event.getGuild().getAudioManager().getSendingHandler();
-            handler.setOnTrackEndLambda(blindTest::onTrackEnd);
+            AudioManager manager = event.getGuild().getAudioManager();
+
+            AudioHandler handler = (AudioHandler) manager.getSendingHandler();
+            handler.setOnTrackEndLambda(() -> {
+                VoiceChannel vc = manager.getConnectedChannel();
+                for (Member member : vc.getMembers()) { // Add unknown players
+                    if (!member.getUser().isBot()) blindTest.addScore(member.getUser().getName(), 0);
+                }
+                blindTest.onTrackEnd();
+            });
             handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor()));
+
             if (blindTest.getCurrentSongEntry().getStartOffset() > 0) {
                 AudioTrack playingTrack = handler.getPlayer().getPlayingTrack();
                 playingTrack.setPosition(1000L * blindTest.getCurrentSongEntry().getStartOffset());

@@ -289,14 +289,19 @@ public class BlindTest {
             scoreMap.get(e.getValue()).add(e.getKey());
         }
 
-        String scoreboard = "⏫ Scores (" + doneEntrySize + " track" + (doneEntrySize > 1 ? "s" : "") + " played out of " + getEntriesSize() + ") :";
-        scoreboard += "```";
-        for (Map.Entry<Integer, List<String>> e : scoreMap.entrySet()) {
-            scoreboard += "\n" + String.format("%1$-11s", e.getKey() + " point" + ((e.getKey() > 1 || e.getKey() < -1) ? "s" : "")) + "   " + String.join(", ", e.getValue());
-        }
-        scoreboard += "```";
+        if (scoreMap.isEmpty()) {
+            btChannel.sendMessage("No one scored yet ..").queue();
+        } else {
+            String scoreboard = "⏫ Scores (" + doneEntrySize + " track" + (doneEntrySize > 1 ? "s" : "") + " played out of " + getEntriesSize() + ") :";
+            scoreboard += "```";
+            for (Map.Entry<Integer, List<String>> e : scoreMap.entrySet()) {
+                scoreboard += "\n" + String.format("%1$-11s", e.getKey() + " point" + ((e.getKey() > 1 || e.getKey() < -1) ? "s" : "")) + "   " + String.join(", ", e.getValue());
+            }
+            scoreboard += "```";
 
-        btChannel.sendMessage(scoreboard).queue();
+            btChannel.sendMessage(scoreboard).queue();
+        }
+
     }
 
     public AddResult addSongRequest(String author, AudioTrack audioTrack, TrackMetadata trackMetadata, int startOffset) {
