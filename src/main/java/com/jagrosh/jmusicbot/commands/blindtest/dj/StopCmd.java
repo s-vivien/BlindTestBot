@@ -34,6 +34,7 @@ public class StopCmd extends BTDJCommand {
     @Override
     public void doCommand(CommandEvent event) {
         AudioHandler handler = (AudioHandler) event.getGuild().getAudioManager().getSendingHandler();
+        assert handler != null;
         handler.stopAndClear();
         event.getGuild().getAudioManager().closeAudioConnection();
         blindTest.clearCurrentSong();

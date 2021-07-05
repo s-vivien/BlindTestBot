@@ -6,15 +6,14 @@ import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import com.jagrosh.jdautilities.commons.utils.FinderUtil;
 import com.jagrosh.jmusicbot.BotConfig;
+import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.blindtest.model.AddResult;
 import com.jagrosh.jmusicbot.blindtest.model.SongEntry;
 import com.jagrosh.jmusicbot.blindtest.model.TrackMetadata;
 import com.jagrosh.jmusicbot.settings.Settings;
 import com.jagrosh.jmusicbot.utils.FormatUtil;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -61,6 +60,7 @@ public class BlindTest {
     private String backupPath;
 
     // Current song
+    private Set<String> skipRequests = new HashSet<>();
     private SongEntry currentSongEntry = null;
     private int maxDistCombo, maxDistArtist, maxDistTitle;
     private int[] maxDistExtras;
@@ -81,6 +81,7 @@ public class BlindTest {
         artistFound = false;
         Arrays.fill(extrasFound, false);
         currentSongEntry = null;
+        skipRequests.clear();
     }
 
     public String whatsLeftToFind() {
@@ -93,6 +94,31 @@ public class BlindTest {
         return yetToFind;
     }
 
+    public void onSkip(MessageReceivedEvent event) {
+        if (skipRequests.add(event.getAuthor().getName())) {
+            String msg = skipRequests.size() + " player(s) requested a *skip*.";
+            VoiceChannel vc = event.getGuild().getAudioManager().getConnectedChannel();
+            assert vc != null;
+            int requiredSkipNumber = 1 + (vc.getMembers().size() - 1) / 2;
+            boolean skip = false;
+            if (skipRequests.size() >= requiredSkipNumber) {
+                skip = true;
+                msg += " **Skipping current song !**";
+            } else {
+                msg += " " + (requiredSkipNumber - skipRequests.size()) + " more needed.";
+            }
+            btChannel.sendMessage(msg).queue();
+
+            if (skip) {
+                AudioHandler handler = (AudioHandler) event.getGuild().getAudioManager().getSendingHandler();
+                assert handler != null;
+                handler.stopAndClear();
+                event.getGuild().getAudioManager().closeAudioConnection();
+                clearCurrentSong();
+            }
+        }
+    }
+
     public void onProposition(MessageReceivedEvent event) {
         if (event.getChannel() != this.btChannel) return;
         if (currentSongEntry == null) return;
@@ -101,6 +127,11 @@ public class BlindTest {
         String author = event.getAuthor().getName();
         if (author.equals(currentSongEntry.getOwner())) return;
         String proposition = event.getMessage().getContentRaw();
+
+        if (event.getMessage().getContentDisplay().equals(":skip:")) {
+            onSkip(event);
+            return;
+        }
 
         proposition = cleanLight(proposition);
 
