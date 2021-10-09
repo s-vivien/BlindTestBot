@@ -59,10 +59,10 @@ public class BotConfig {
         // read config from file
         try {
             // get the path to the config, default config.txt
-            path = OtherUtil.getPath(System.getProperty("config.txt", System.getProperty("config", "config.txt")));
+            path = OtherUtil.getPath(System.getProperty("config.file", System.getProperty("config", "config.txt")));
             if (path.toFile().exists()) {
-                if (System.getProperty("config.txt") == null)
-                    System.setProperty("config.txt", System.getProperty("config", "config.txt"));
+                if (System.getProperty("config.file") == null)
+                    System.setProperty("config.file", System.getProperty("config", path.toAbsolutePath().toString()));
                 ConfigFactory.invalidateCaches();
             }
 
