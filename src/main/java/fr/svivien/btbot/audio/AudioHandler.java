@@ -15,14 +15,14 @@
  */
 package fr.svivien.btbot.audio;
 
-import fr.svivien.btbot.JMusicBot;
-import fr.svivien.btbot.utils.FormatUtil;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
+import fr.svivien.btbot.JMusicBot;
+import fr.svivien.btbot.utils.FormatUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.MessageBuilder;
@@ -32,6 +32,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 
 import java.nio.ByteBuffer;
+import java.util.function.Consumer;
 
 /**
  * @author John Grosh <john.a.grosh@gmail.com>
@@ -41,10 +42,15 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler 
     private final AudioPlayer audioPlayer;
     private final long guildId;
     private AudioFrame lastFrame;
-    private Runnable onTrackEndLambda;
+    private Consumer<Long> onTrackEndLambda;
+    private Consumer<AudioTrack> onTrackStartLambda;
 
-    public void setOnTrackEndLambda(Runnable onTrackEndLambda) {
+    public void setOnTrackEndLambda(Consumer<Long> onTrackEndLambda) {
         this.onTrackEndLambda = onTrackEndLambda;
+    }
+
+    public void setOnTrackStartLambda(Consumer<AudioTrack> onTrackStartLambda) {
+        this.onTrackStartLambda = onTrackStartLambda;
     }
 
     protected AudioHandler(PlayerManager manager, Guild guild, AudioPlayer player) {
@@ -81,12 +87,13 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler 
     // Audio Events
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        if (onTrackEndLambda != null) onTrackEndLambda.run();
+        if (onTrackEndLambda != null) onTrackEndLambda.accept(track.getPosition());
     }
 
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         manager.getBot().getNowplayingHandler().onTrackUpdate(guildId, track, this);
+        if (onTrackStartLambda != null) onTrackStartLambda.accept(track);
     }
 
     // Formatting

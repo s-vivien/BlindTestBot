@@ -59,33 +59,53 @@ public class NextCmd extends BTDJCommand {
     private class ResultHandler implements AudioLoadResultHandler {
 
         private CommandEvent event;
+        private int tries = 0;
 
         public ResultHandler(CommandEvent event) {
             this.event = event;
         }
 
+        private boolean queueTrack(AudioHandler handler, AudioTrack track) {
+            if (tries++ < 10) {
+                handler.addTrack(new QueuedTrack(track.makeClone(), event.getAuthor()));
+                return true;
+            }
+            return false;
+        }
+
         @Override
         public void trackLoaded(AudioTrack audioTrack) {
             AudioManager manager = event.getGuild().getAudioManager();
-
             AudioHandler handler = (AudioHandler) manager.getSendingHandler();
-            handler.setOnTrackEndLambda(() -> {
-                VoiceChannel vc = manager.getConnectedChannel();
-                if (vc != null) {
-                    for (Member member : vc.getMembers()) { // Add unknown players
-                        if (!member.getUser().isBot()) blindTest.addScore(member.getUser().getName(), 0);
-                    }
-                }
-                blindTest.onTrackEnd();
-            });
-            handler.addTrack(new QueuedTrack(audioTrack, event.getAuthor()));
+            if (handler == null) return;
 
-            if (blindTest.getCurrentSongEntry().getStartOffset() > 0) {
-                AudioTrack playingTrack = handler.getPlayer().getPlayingTrack();
-                playingTrack.setPosition(1000L * blindTest.getCurrentSongEntry().getStartOffset());
-            }
+            handler.setOnTrackStartLambda((AudioTrack t) -> {
+                // Forwarding to the provided timestamp
+                if (blindTest.getCurrentSongEntry().getStartOffset() > 0) {
+                    t.setPosition(1000L * blindTest.getCurrentSongEntry().getStartOffset());
+                }
+            });
+            handler.setOnTrackEndLambda((Long position) -> {
+                if (position == 0) { // The track most likely crashed at loading, retrying
+                    handler.stopAndClear();
+                    if (!queueTrack(handler, audioTrack)) {
+                        blindTest.onTrackEnd();
+                    }
+                } else {
+                    // Add unknown players to the leaderboard
+                    VoiceChannel vc = manager.getConnectedChannel();
+                    if (vc != null) {
+                        for (Member member : vc.getMembers()) {
+                            if (!member.getUser().isBot()) blindTest.addScore(member.getUser().getName(), 0);
+                        }
+                    }
+
+                    blindTest.onTrackEnd();
+                }
+            });
+            queueTrack(handler, audioTrack);
             event.reply("\uD83D\uDEA8 Submission " + blindTest.getDoneEntriesSize() + "/" + blindTest.getEntriesSize() + " from **" + blindTest.getCurrentSongEntry().getOwner() + "** who cannot play during this round \uD83D\uDEA8 " +
-                        blindTest.whatsLeftToFind());
+                    blindTest.whatsLeftToFind());
         }
 
         @Override
