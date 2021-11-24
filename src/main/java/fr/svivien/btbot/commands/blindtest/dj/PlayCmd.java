@@ -16,17 +16,17 @@
 package fr.svivien.btbot.commands.blindtest.dj;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException.Severity;
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import fr.svivien.btbot.Bot;
 import fr.svivien.btbot.audio.AudioHandler;
 import fr.svivien.btbot.audio.QueuedTrack;
 import fr.svivien.btbot.blindtest.BlindTest;
 import fr.svivien.btbot.commands.BTDJCommand;
 import fr.svivien.btbot.utils.FormatUtil;
-import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException.Severity;
-import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Message;
 
 public class PlayCmd extends BTDJCommand {

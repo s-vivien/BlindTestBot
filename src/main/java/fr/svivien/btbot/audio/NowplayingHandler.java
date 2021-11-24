@@ -15,10 +15,10 @@
  */
 package fr.svivien.btbot.audio;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import fr.svivien.btbot.Bot;
 import fr.svivien.btbot.entities.Pair;
 import fr.svivien.btbot.settings.Settings;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;

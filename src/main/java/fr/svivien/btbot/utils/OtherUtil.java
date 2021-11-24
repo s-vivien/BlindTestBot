@@ -15,7 +15,7 @@
  */
 package fr.svivien.btbot.utils;
 
-import fr.svivien.btbot.JMusicBot;
+import fr.svivien.btbot.BlindTestBot;
 import fr.svivien.btbot.entities.Prompt;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
@@ -40,10 +40,6 @@ import java.nio.file.Paths;
  */
 public class OtherUtil
 {
-    public final static String NEW_VERSION_AVAILABLE = "There is a new version of JMusicBot available!\n"
-                    + "Current version: %s\n"
-                    + "New Version: %s\n\n"
-                    + "Please visit https://github.com/jagrosh/MusicBot/releases/latest to get the latest release.";
     private final static String WINDOWS_INVALID_PATH = "c:\\windows\\system32\\";
     
     /**
@@ -62,7 +58,7 @@ public class OtherUtil
             String filename = path.substring(WINDOWS_INVALID_PATH.length());
             try
             {
-                path = new File(JMusicBot.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile().getPath() + File.separator + filename;
+                path = new File(BlindTestBot.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile().getPath() + File.separator + filename;
             }
             catch(URISyntaxException ex) {}
         }
@@ -173,8 +169,8 @@ public class OtherUtil
     
     public static String getCurrentVersion()
     {
-        if(JMusicBot.class.getPackage()!=null && JMusicBot.class.getPackage().getImplementationVersion()!=null)
-            return JMusicBot.class.getPackage().getImplementationVersion();
+        if(BlindTestBot.class.getPackage()!=null && BlindTestBot.class.getPackage().getImplementationVersion()!=null)
+            return BlindTestBot.class.getPackage().getImplementationVersion();
         else
             return "UNKNOWN";
     }

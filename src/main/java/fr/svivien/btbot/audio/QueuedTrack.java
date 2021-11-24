@@ -15,9 +15,9 @@
  */
 package fr.svivien.btbot.audio;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import fr.svivien.btbot.queue.Queueable;
 import fr.svivien.btbot.utils.FormatUtil;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.User;
 
 /**

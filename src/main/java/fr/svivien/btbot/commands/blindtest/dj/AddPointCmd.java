@@ -35,11 +35,12 @@ public class AddPointCmd extends BTDJCommand {
         String[] spl = event.getArgs().split(" ", 2);
 
         try {
-            Integer pts = Integer.valueOf(spl[0]);
+            int pts = Integer.parseInt(spl[0]);
             String nick = spl[1];
-            if (blindTest.isKnownNick(nick)) {
-                int score = blindTest.addScore(nick, pts);
-                event.reply(pts + " added" + ((pts > 1 || pts < -1) ? "s" : "") + " to " + nick + ", who now has " + score);
+            String realNick = blindTest.checkNick(nick);
+            if (realNick != null) {
+                int score = blindTest.addScore(realNick, pts);
+                event.reply(pts + " added" + ((pts > 1 || pts < -1) ? "s" : "") + " to " + realNick + ", who now has " + score);
             } else {
                 event.reply("Unknown player..");
             }

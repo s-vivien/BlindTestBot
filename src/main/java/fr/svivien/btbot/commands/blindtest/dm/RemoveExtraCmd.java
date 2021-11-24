@@ -27,29 +27,29 @@ public class RemoveExtraCmd extends BTDMCommand {
     public RemoveExtraCmd(Bot bot, BlindTest blindTest) {
         super(bot, blindTest);
         this.name = "removeextra";
-        this.help = "removes an extra input to guess to the song entry";
-        this.arguments = "<song index> <extra index>";
+        this.help = "removes an extra input to guess from the song entry";
+        this.arguments = "<song index> <extra name>";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.guildOnly = false;
     }
 
     @Override
-    public void doCommand(CommandEvent commandEvent) {
-        String author = commandEvent.getMessage().getAuthor().getName();
-        String[] spl = commandEvent.getArgs().split(" ", 2);
+    public void doCommand(CommandEvent event) {
+        String author = event.getMessage().getAuthor().getName();
+        String[] spl = event.getArgs().split(" ", 2);
 
         try {
             Integer songIdx = Integer.valueOf(spl[0]);
-            Integer extraIdx = Integer.valueOf(spl[1]);
-            boolean updateResult = blindTest.removeExtra(author, songIdx, extraIdx);
-            if (!updateResult) commandEvent.reply("Error : could not find any submission and/or extra with that index");
-            else commandEvent.reply("Extra successfully removed");
+            String extraName = spl[1];
+            boolean updateResult = blindTest.removeExtra(author, songIdx, extraName);
+            if (!updateResult) event.reply("Error : no submission with that index, or no extra with that name");
+            else event.reply("Extra successfully removed");
             List<String> lists = blindTest.getSongList(author);
             for (String list : lists) {
-                commandEvent.reply(list);
+                event.reply(list);
             }
         } catch (Exception e) {
-            commandEvent.reply("Invalid parameters, expected " + arguments);
+            event.reply("Invalid parameters, expected " + arguments);
         }
     }
 

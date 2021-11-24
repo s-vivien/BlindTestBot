@@ -4,13 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import fr.svivien.btbot.BotConfig;
 import fr.svivien.btbot.audio.AudioHandler;
 import fr.svivien.btbot.blindtest.model.AddResult;
+import fr.svivien.btbot.blindtest.model.Guessable;
 import fr.svivien.btbot.blindtest.model.SongEntry;
 import fr.svivien.btbot.blindtest.model.TrackMetadata;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -33,16 +35,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class BlindTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BlindTest.class);
-    private Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String AUTOBACKUP_NAME = "AUTO";
     private static final String EMOJI = ":fire:";
-    private static final int SINGLE_SCORE = 1;
-    private static final String SUCCESS_REPLY_TEMPLATE = EMOJI + " %s found %s `[%s]` ! (+%d) " + EMOJI;
-    private static final int COMBO_SCORE = 3;
+    private static final String SUCCESS_REPLY_TEMPLATE2 = EMOJI + " %s `[%s]` found by %s ! (+%d) " + EMOJI;
     private static final int NOTFOUND_SCORE = -1;
     private static final int MAX_DIST_RATIO = 6;
     private static final int MAX_DIST_OFFSET = 3;
@@ -52,46 +53,41 @@ public class BlindTest {
     // State
     private ConcurrentHashMap<String, LinkedHashSet<SongEntry>> entries = new ConcurrentHashMap<>();
     private Map<String, Integer> scores = new HashMap<>();
+    private final Set<String> trackGuessers = new HashSet<>();
     private boolean locked = false;
     private TextChannel btChannel;
 
     private Integer songsPerPlayer;
-    private Integer maximumExtrasNumber;
-    private String backupPath;
+    private final Integer maximumExtrasNumber;
+    private final String backupPath;
 
     // Current song
-    private Set<String> skipRequests = new HashSet<>();
+    private final Set<String> skipRequests = new HashSet<>();
     private SongEntry currentSongEntry = null;
-    private int maxDistCombo, maxDistArtist, maxDistTitle;
-    private int[] maxDistExtras;
-    private boolean trackFound, artistFound;
-    private boolean[] extrasFound;
-    private int extrasYetToFind;
+    private final int[] maxDists;
+    private final boolean[] isGuessed;
+    private int yetToGuess;
 
     public BlindTest(BotConfig cfg) {
         songsPerPlayer = cfg.getSongsPerPlayer();
         backupPath = cfg.getBackupPath();
         maximumExtrasNumber = cfg.getMaximumExtrasNumber();
-        extrasFound = new boolean[maximumExtrasNumber];
-        maxDistExtras = new int[maximumExtrasNumber];
+        isGuessed = new boolean[2 + maximumExtrasNumber];
+        maxDists = new int[2 + maximumExtrasNumber];
     }
 
     public void clearCurrentSong() {
-        trackFound = false;
-        artistFound = false;
-        Arrays.fill(extrasFound, false);
+        Arrays.fill(isGuessed, false);
         currentSongEntry = null;
         skipRequests.clear();
     }
 
     public String whatsLeftToFind() {
-        if (trackFound && artistFound && extrasYetToFind == 0) return "Everything has been found";
-        String yetToFind = "Left to find :";
-        int parts = 0;
-        if (!trackFound) yetToFind += (parts++ > 0 ? "," : "") + " title";
-        if (!artistFound) yetToFind += (parts++ > 0 ? "," : "") + " artist";
-        if (extrasYetToFind > 0) yetToFind += (parts++ > 0 ? ", " : " ") + extrasYetToFind + " extra(s)";
-        return yetToFind;
+        if (yetToGuess == 0) return "Everything has been found";
+        return "Left to find : " + IntStream.range(0, currentSongEntry.getGuessables().size())
+                .filter(i -> !isGuessed[i])
+                .mapToObj(i -> currentSongEntry.getGuessables().get(i).getName())
+                .collect(Collectors.joining(", "));
     }
 
     public void onSkip(MessageReceivedEvent event) {
@@ -122,7 +118,7 @@ public class BlindTest {
     public void onProposition(MessageReceivedEvent event) {
         if (event.getChannel() != this.btChannel) return;
         if (currentSongEntry == null) return;
-        if (artistFound && trackFound && extrasYetToFind == 0) return;
+        if (yetToGuess == 0) return;
 
         String author = event.getAuthor().getName();
         if (author.equals(currentSongEntry.getOwner())) return;
@@ -135,59 +131,16 @@ public class BlindTest {
 
         proposition = cleanLight(proposition);
 
-        int combo = Math.min(calculateDistance(proposition, currentSongEntry.getArtist() + " " + currentSongEntry.getTitle()), calculateDistance(proposition, currentSongEntry.getTitle() + " " + currentSongEntry.getArtist()));
-        if (combo <= maxDistCombo) {
-            if (!artistFound && !trackFound) {
-                artistFound = true;
-                trackFound = true;
-                addScore(author, COMBO_SCORE);
-                btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist and the title", currentSongEntry.getArtist() + "][" + currentSongEntry.getTitle(), COMBO_SCORE) + " " + whatsLeftToFind()).queue();
-                return;
-            } else if (!artistFound) {
-                artistFound = true;
-                addScore(author, SINGLE_SCORE);
-                btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist", currentSongEntry.getArtist(), SINGLE_SCORE) + " " + whatsLeftToFind()).queue();
-                return;
-            } else if (!trackFound) {
-                trackFound = true;
-                addScore(author, SINGLE_SCORE);
-                btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "the title", currentSongEntry.getTitle(), SINGLE_SCORE) + " " + whatsLeftToFind()).queue();
-                return;
-            }
-        }
-
-        if (!artistFound) {
-            int artistAlone = calculateDistance(proposition, currentSongEntry.getArtist());
-            if (artistAlone <= maxDistArtist || (proposition.contains(currentSongEntry.getArtist()) && proposition.length() <= INCLUDE_TOLERANCE * currentSongEntry.getArtist().length())) {
-                artistFound = true;
-                addScore(author, SINGLE_SCORE);
-                btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "the artist", currentSongEntry.getArtist(), SINGLE_SCORE) + " " + whatsLeftToFind()).queue();
-                return;
-            }
-        }
-
-        if (!trackFound) {
-            int trackAlone = calculateDistance(proposition, currentSongEntry.getTitle());
-            if (trackAlone <= maxDistTitle || (proposition.contains(currentSongEntry.getTitle()) && proposition.length() <= INCLUDE_TOLERANCE * currentSongEntry.getTitle().length())) {
-                trackFound = true;
-                addScore(author, SINGLE_SCORE);
-                btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "the title", currentSongEntry.getTitle(), SINGLE_SCORE) + " " + whatsLeftToFind()).queue();
-                return;
-            }
-        }
-
-        if (extrasYetToFind > 0) {
-            for (int i = 0; i < currentSongEntry.getExtras().size(); i++) {
-                if (extrasFound[i]) continue;
-                String extra = currentSongEntry.getExtras().get(i);
-                int extraAlone = calculateDistance(proposition, extra);
-                if (extraAlone <= maxDistExtras[i] || (proposition.contains(extra) && proposition.length() <= INCLUDE_TOLERANCE * extra.length())) {
-                    extrasFound[i] = true;
-                    extrasYetToFind--;
-                    addScore(author, SINGLE_SCORE);
-                    btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE, author, "one extra", extra, SINGLE_SCORE) + " " + whatsLeftToFind()).queue();
-                    return;
-                }
+        int i = -1;
+        for (Guessable guessable : currentSongEntry.getGuessables()) {
+            if (isGuessed[++i]) continue;
+            if (calculateDistance(proposition, guessable.getValue()) <= maxDists[i] || (proposition.contains(guessable.getValue()) && proposition.length() <= INCLUDE_TOLERANCE * guessable.getValue().length())) {
+                isGuessed[i] = true;
+                yetToGuess--;
+                int delta = 1 + (trackGuessers.contains(author) ? 1 : 0);
+                addScore(author, delta);
+                trackGuessers.add(author);
+                btChannel.sendMessage(String.format(SUCCESS_REPLY_TEMPLATE2, guessable.getName(), guessable.getValue(), author, delta) + " " + whatsLeftToFind()).queue();
             }
         }
     }
@@ -203,14 +156,12 @@ public class BlindTest {
         if (entryList.isEmpty()) return false;
         Collections.shuffle(entryList);
         clearCurrentSong();
+        trackGuessers.clear();
         currentSongEntry = entryList.get(0);
-        extrasYetToFind = currentSongEntry.getExtras().size();
+        yetToGuess = currentSongEntry.getGuessables().size();
         currentSongEntry.setDone(true);
-        maxDistCombo = Math.max(0, (currentSongEntry.getArtist().length() + currentSongEntry.getTitle().length() + 1) - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
-        maxDistArtist = Math.max(0, currentSongEntry.getArtist().length() - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
-        maxDistTitle = Math.max(0, currentSongEntry.getTitle().length() - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
-        for (int i = 0; i < currentSongEntry.getExtras().size(); i++) {
-            maxDistExtras[i] = Math.max(0, currentSongEntry.getExtras().get(i).length() - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
+        for (int i = 0; i < yetToGuess; i++) {
+            maxDists[i] = Math.max(0, currentSongEntry.getGuessables().get(i).getValue().length() - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
         }
         return true;
     }
@@ -301,7 +252,6 @@ public class BlindTest {
 
             btChannel.sendMessage(scoreboard).queue();
         }
-
     }
 
     public AddResult addSongRequest(String author, AudioTrack audioTrack, TrackMetadata trackMetadata, int startOffset) {
@@ -331,36 +281,42 @@ public class BlindTest {
         return false;
     }
 
-    public boolean updateArtist(String author, Integer index, String artist) {
+    public boolean updateGuessable(String author, Integer index, String guessableName, String guessableValue) {
         SongEntry e = getEntryByIndex(author, index);
         if (e == null) return false;
-        e.setArtist(cleanLight(artist));
+        Guessable g = e.getGuessable(guessableName, 0);
+        if (g == null) return false;
+
+        if (guessableName.equals("artist")) {
+            guessableValue = cleanLight(guessableValue);
+        } else if (guessableName.equals("title")) {
+            guessableValue = cleanTitle(guessableValue);
+        } else {
+            guessableValue = guessableValue.toLowerCase();
+        }
+        g.setValue(guessableValue);
+
         e.recomputeOriginalTitle();
         return true;
     }
 
-    public boolean updateTitle(String author, Integer index, String title) {
+    public boolean addExtra(String author, Integer index, String extraName, String extraValue) {
         SongEntry e = getEntryByIndex(author, index);
         if (e == null) return false;
-        e.setTitle(cleanTitle(title));
+        if (e.getGuessables().size() >= 2 + maximumExtrasNumber) return false;
+        Guessable g = e.getGuessable(extraName, 0);
+        if (g != null) return false;
+        e.getGuessables().add(new Guessable(extraName, extraValue.toLowerCase()));
         e.recomputeOriginalTitle();
         return true;
     }
 
-    public boolean addExtra(String author, Integer index, String extra) {
+    public boolean removeExtra(String author, Integer index, String extraName) {
         SongEntry e = getEntryByIndex(author, index);
         if (e == null) return false;
-        if (e.getExtras().size() >= maximumExtrasNumber) return false;
-        e.getExtras().add(extra.toLowerCase());
-        e.recomputeOriginalTitle();
-        return true;
-    }
-
-    public boolean removeExtra(String author, Integer songIndex, Integer extraIndex) {
-        SongEntry e = getEntryByIndex(author, songIndex);
-        if (e == null) return false;
-        if (extraIndex > e.getExtras().size()) return false;
-        e.getExtras().remove(extraIndex - 1);
+        Guessable g = e.getGuessable(extraName, 2);
+        if (g == null) return false;
+        e.getGuessables().remove(g);
         e.recomputeOriginalTitle();
         return true;
     }
@@ -372,17 +328,9 @@ public class BlindTest {
         return true;
     }
 
-    public boolean everyAnswerFound() {
-        if (!trackFound || !artistFound) return false;
-        for (int i = 0; i < currentSongEntry.getExtras().size(); i++) {
-            if (!extrasFound[i]) return false;
-        }
-        return true;
-    }
-
     public void onTrackEnd() {
         String reply = "⏳ The track was **[ " + currentSongEntry.getCompleteOriginalTitle() + " ]**";
-        if (!trackFound && !artistFound && (currentSongEntry.getExtras().isEmpty() || currentSongEntry.getExtras().size() == extrasYetToFind)) {
+        if (yetToGuess == currentSongEntry.getGuessables().size()) {
             addScore(currentSongEntry.getOwner(), NOTFOUND_SCORE);
             reply += " and no one found it .. (" + NOTFOUND_SCORE + " for " + currentSongEntry.getOwner() + ")";
         }
@@ -427,16 +375,20 @@ public class BlindTest {
         return locked;
     }
 
-    public boolean isKnownNick(String nick) {
-        return scores.get(nick) != null;
+    public String checkNick(String nick) {
+        nick = nick.toLowerCase();
+        for (Map.Entry<String, Integer> entry : scores.entrySet()) {
+            if (entry.getKey().toLowerCase().equals(nick)) return entry.getKey();
+        }
+        return null;
     }
 
-    public int addScore(String nick, int score) {
-        Integer previousScore = scores.get(nick);
-        if (previousScore == null) previousScore = 0;
-        previousScore += score;
-        scores.put(nick, previousScore);
-        return previousScore;
+    public int addScore(String nick, int delta) {
+        Integer score = scores.get(nick);
+        if (score == null) score = 0;
+        score += delta;
+        scores.put(nick, score);
+        return score;
     }
 
     public void reset() {
@@ -463,9 +415,11 @@ public class BlindTest {
         try {
             String entriesJson = readFile(computeBackFilePath(name + "_entries"));
             String scoresJson = readFile(computeBackFilePath(name + "_scores"));
-            Type entriesType = new TypeToken<ConcurrentHashMap<String, LinkedHashSet<SongEntry>>>() {}.getType();
+            Type entriesType = new TypeToken<ConcurrentHashMap<String, LinkedHashSet<SongEntry>>>() {
+            }.getType();
             this.entries = GSON.fromJson(entriesJson, entriesType);
-            Type scoresType = new TypeToken<HashMap<String, Integer>>() {}.getType();
+            Type scoresType = new TypeToken<HashMap<String, Integer>>() {
+            }.getType();
             this.scores = GSON.fromJson(scoresJson, scoresType);
         } catch (IllegalStateException e) {
             return "No backup found with that name..";
@@ -560,13 +514,14 @@ public class BlindTest {
                 int cost = source.charAt(i - 1) == target.charAt(j - 1) ? 0 : 1;
 
                 // special cases
-                if (source.charAt(i - 1) == ' ' && (target.charAt(j - 1) == '-' || target.charAt(j - 1) == '\'')) cost = 0;
+                if (source.charAt(i - 1) == ' ' && (target.charAt(j - 1) == '-' || target.charAt(j - 1) == '\''))
+                    cost = 0;
 
                 dist[i][j] = Math.min(Math.min(dist[i - 1][j] + 1, dist[i][j - 1] + 1), dist[i - 1][j - 1] + cost);
                 if (i > 1 &&
-                    j > 1 &&
-                    source.charAt(i - 1) == target.charAt(j - 2) &&
-                    source.charAt(i - 2) == target.charAt(j - 1)) {
+                        j > 1 &&
+                        source.charAt(i - 1) == target.charAt(j - 2) &&
+                        source.charAt(i - 2) == target.charAt(j - 1)) {
                     dist[i][j] = Math.min(dist[i][j], dist[i - 2][j - 2] + cost);
                 }
             }

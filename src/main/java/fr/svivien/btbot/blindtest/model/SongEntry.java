@@ -1,7 +1,9 @@
 package fr.svivien.btbot.blindtest.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SongEntry {
 
@@ -9,19 +11,18 @@ public class SongEntry {
 
     private String url;
     private String owner;
-    private String artist;
-    private String title;
-    private List<String> extras = new ArrayList<>();
+    private List<Guessable> guessables;
     private String completeOriginalTitle;
     private String ytId;
-    private int startOffset = 0;
+    private int startOffset;
     private boolean done = false;
 
     public SongEntry(String url, String owner, String artist, String title, String completeOriginalTitle, String ytId, int startOffset) {
         this.url = url;
         this.owner = owner;
-        this.artist = artist != null ? artist : DEFAULT;
-        this.title = title != null ? title : DEFAULT;
+        this.guessables = new ArrayList<>();
+        this.guessables.add(new Guessable("artist", artist != null ? artist : DEFAULT));
+        this.guessables.add(new Guessable("title", title != null ? title : DEFAULT));
         this.completeOriginalTitle = completeOriginalTitle;
         this.ytId = ytId;
         this.startOffset = startOffset;
@@ -39,15 +40,17 @@ public class SongEntry {
 
     @Override
     public String toString() {
-        String str = "<" + url + (startOffset > 0 ? "&t=" + startOffset : "") + "> artist=[`" + artist + "`] title=[`" + title + "`]";
-        if (!extras.isEmpty()) {
-            for (int j = 0; j < extras.size(); j++) str += " extra" + (j + 1) + "=[`" + extras.get(j) + "`]";
-        }
-        return str;
+        return "<" + url + (startOffset > 0 ? "&t=" + startOffset : "") + "> "
+                + guessables.stream().map(g -> g.getName() + "=[`" + g.getValue() + "`]")
+                .collect(Collectors.joining(", "));
+    }
+
+    public Guessable getGuessable(String name, int skip) {
+        return guessables.stream().skip(skip).filter(g -> g.getName().equals(name)).findFirst().orElse(null);
     }
 
     public boolean isIncomplete() {
-        return artist.equals(DEFAULT) || title.equals(DEFAULT);
+        return guessables.get(0).getValue().equals(DEFAULT) || guessables.get(1).getValue().equals(DEFAULT);
     }
 
     public String getUrl() {
@@ -59,58 +62,23 @@ public class SongEntry {
     }
 
     public void recomputeOriginalTitle() {
-        completeOriginalTitle = artist + " - " + title;
-        for (String extra : extras) {
-            completeOriginalTitle += " - " + extra;
-        }
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
+        completeOriginalTitle = guessables.stream().map(Guessable::getValue).collect(Collectors.joining(" - "));
     }
 
     public void setOwner(String owner) {
         this.owner = owner;
     }
 
-    public String getArtist() {
-        return artist;
-    }
-
-    public void setArtist(String artist) {
-        this.artist = artist;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public List<String> getExtras() {
-        return extras;
-    }
-
-    public void setExtras(List<String> extras) {
-        this.extras = extras;
+    public List<Guessable> getGuessables() {
+        return guessables;
     }
 
     public String getCompleteOriginalTitle() {
         return completeOriginalTitle;
     }
 
-    public void setCompleteOriginalTitle(String completeOriginalTitle) {
-        this.completeOriginalTitle = completeOriginalTitle;
-    }
-
     public String getYtId() {
         return ytId;
-    }
-
-    public void setYtId(String ytId) {
-        this.ytId = ytId;
     }
 
     public int getStartOffset() {

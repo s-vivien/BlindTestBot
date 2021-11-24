@@ -17,10 +17,10 @@ package fr.svivien.btbot.commands.owner;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jdautilities.commons.JDAUtilitiesInfo;
+import com.sedmelluq.discord.lavaplayer.tools.PlayerLibrary;
 import fr.svivien.btbot.Bot;
 import fr.svivien.btbot.commands.OwnerCommand;
 import fr.svivien.btbot.utils.OtherUtil;
-import com.sedmelluq.discord.lavaplayer.tools.PlayerLibrary;
 import net.dv8tion.jda.api.JDAInfo;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.ChannelType;
@@ -48,7 +48,7 @@ public class DebugCmd extends OwnerCommand {
         sb.append("```\nSystem Properties:");
         for (String key : PROPERTIES)
             sb.append("\n  ").append(key).append(" = ").append(System.getProperty(key));
-        sb.append("\n\nJMusicBot Information:")
+        sb.append("\n\nBlindTestBot Information:")
                 .append("\n  Version = ").append(OtherUtil.getCurrentVersion())
                 .append("\n  Owner = ").append(bot.getConfig().getOwnerId())
                 .append("\n  Prefix = ").append(bot.getConfig().getPrefix())

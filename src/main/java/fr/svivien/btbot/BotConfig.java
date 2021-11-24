@@ -15,13 +15,13 @@
  */
 package fr.svivien.btbot;
 
-import fr.svivien.btbot.entities.Prompt;
-import fr.svivien.btbot.utils.FormatUtil;
-import fr.svivien.btbot.utils.OtherUtil;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
+import fr.svivien.btbot.entities.Prompt;
+import fr.svivien.btbot.utils.FormatUtil;
+import fr.svivien.btbot.utils.OtherUtil;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 
@@ -35,8 +35,8 @@ import java.nio.file.Path;
 public class BotConfig {
     private final Prompt prompt;
     private final static String CONTEXT = "Config";
-    private final static String START_TOKEN = "/// START OF JMUSICBOT CONFIG ///";
-    private final static String END_TOKEN = "/// END OF JMUSICBOT CONFIG ///";
+    private final static String START_TOKEN = "/// START OF BTBOT CONFIG ///";
+    private final static String END_TOKEN = "/// END OF BTBOT CONFIG ///";
 
     private Path path = null;
     private String token, prefix, altprefix, helpWord, successEmoji, warningEmoji, errorEmoji, loadingEmoji, backupPath;
@@ -60,7 +60,7 @@ public class BotConfig {
         try {
             // get the path to the config, default config.txt
             path = OtherUtil.getPath(System.getProperty("config.file", System.getProperty("config", "config.txt")));
-            System.err.println("USING CFG : " + path);
+            System.out.println("Using cfg : " + path);
             if (path.toFile().exists()) {
                 if (System.getProperty("config.file") == null)
                     System.setProperty("config.file", System.getProperty("config", path.toAbsolutePath().toString()));
@@ -99,9 +99,9 @@ public class BotConfig {
             // validate bot token
             if (token == null || token.isEmpty() || token.equalsIgnoreCase("BOT_TOKEN_HERE")) {
                 token = prompt.prompt("Please provide a bot token."
-                                      + "\nInstructions for obtaining a token can be found here:"
-                                      + "\nhttps://github.com/jagrosh/MusicBot/wiki/Getting-a-Bot-Token."
-                                      + "\nBot Token: ");
+                        + "\nInstructions for obtaining a token can be found here:"
+                        + "\nhttps://github.com/jagrosh/MusicBot/wiki/Getting-a-Bot-Token."
+                        + "\nBot Token: ");
                 if (token == null) {
                     prompt.alert(Prompt.Level.WARNING, CONTEXT, "No token provided! Exiting.\n\nConfig Location: " + path.toAbsolutePath().toString());
                     return;
@@ -114,10 +114,10 @@ public class BotConfig {
             if (owner <= 0) {
                 try {
                     owner = Long.parseLong(prompt.prompt("Owner ID was missing, or the provided owner ID is not valid."
-                                                         + "\nPlease provide the User ID of the bot's owner."
-                                                         + "\nInstructions for obtaining your User ID can be found here:"
-                                                         + "\nhttps://github.com/jagrosh/MusicBot/wiki/Finding-Your-User-ID"
-                                                         + "\nOwner User ID: "));
+                            + "\nPlease provide the User ID of the bot's owner."
+                            + "\nInstructions for obtaining your User ID can be found here:"
+                            + "\nhttps://github.com/jagrosh/MusicBot/wiki/Finding-Your-User-ID"
+                            + "\nOwner User ID: "));
                 } catch (NumberFormatException | NullPointerException ex) {
                     owner = 0;
                 }
@@ -154,8 +154,8 @@ public class BotConfig {
             Files.write(path, bytes);
         } catch (IOException ex) {
             prompt.alert(Prompt.Level.WARNING, CONTEXT, "Failed to write new config options to config.txt: " + ex
-                                                        + "\nPlease make sure that the files are not on your desktop or some other restricted area.\n\nConfig Location: "
-                                                        + path.toAbsolutePath().toString());
+                    + "\nPlease make sure that the files are not on your desktop or some other restricted area.\n\nConfig Location: "
+                    + path.toAbsolutePath().toString());
         }
     }
 

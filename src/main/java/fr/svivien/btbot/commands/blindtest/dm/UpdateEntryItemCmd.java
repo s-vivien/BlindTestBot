@@ -22,34 +22,35 @@ import fr.svivien.btbot.commands.BTDMCommand;
 
 import java.util.List;
 
-public class SetEntryArtistCmd extends BTDMCommand {
+public class UpdateEntryItemCmd extends BTDMCommand {
 
-    public SetEntryArtistCmd(Bot bot, BlindTest blindTest) {
+    public UpdateEntryItemCmd(Bot bot, BlindTest blindTest) {
         super(bot, blindTest);
-        this.name = "setartist";
-        this.help = "sets the song artist";
-        this.arguments = "<song index> <artist>";
+        this.name = "set";
+        this.help = "updates the value(s) to guess";
+        this.arguments = "<song index> <name> <value>";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.guildOnly = false;
     }
 
     @Override
-    public void doCommand(CommandEvent commandEvent) {
-        String author = commandEvent.getMessage().getAuthor().getName();
-        String[] spl = commandEvent.getArgs().split(" ", 2);
+    public void doCommand(CommandEvent event) {
+        String author = event.getMessage().getAuthor().getName();
+        String[] spl = event.getArgs().split(" ", 3);
 
         try {
             Integer idx = Integer.valueOf(spl[0]);
-            String artist = spl[1];
-            boolean updateResult = blindTest.updateArtist(author, idx, artist);
-            if (!updateResult) commandEvent.reply("Error : could not find any submission with that index");
-            else commandEvent.reply("Song artist successfully updated");
+            String name = spl[1];
+            String value = spl[2];
+            boolean updateResult = blindTest.updateGuessable(author, idx, name, value);
+            if (!updateResult) event.reply("Error : no submission with that index, or no extra with that name");
+            else event.reply("Song " + name + " successfully updated");
             List<String> lists = blindTest.getSongList(author);
             for (String list : lists) {
-                commandEvent.reply(list);
+                event.reply(list);
             }
         } catch (Exception e) {
-            commandEvent.reply("Invalid parameters, expected " + arguments);
+            event.reply("Invalid parameters, expected " + arguments);
         }
     }
 

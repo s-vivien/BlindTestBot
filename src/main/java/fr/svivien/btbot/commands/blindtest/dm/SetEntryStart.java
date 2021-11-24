@@ -26,7 +26,7 @@ public class SetEntryStart extends BTDMCommand {
 
     public SetEntryStart(Bot bot, BlindTest blindTest) {
         super(bot, blindTest);
-        this.name = "setstart";
+        this.name = "timestamp";
         this.help = "sets the time at which a song should be started, in seconds";
         this.arguments = "<song index> <time>";
         this.aliases = bot.getConfig().getAliases(this.name);

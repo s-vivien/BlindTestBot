@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 /**
  * @author John Grosh (jagrosh)
  */
-public class JMusicBot {
+public class BlindTestBot {
     public final static String PLAY_EMOJI = "\u25B6"; // ▶
     public final static String PAUSE_EMOJI = "\u23F8"; // ⏸
     public final static String STOP_EMOJI = "\u23F9"; // ⏹
@@ -68,7 +68,7 @@ public class JMusicBot {
         Logger log = LoggerFactory.getLogger("Startup");
 
         // create prompt to handle startup
-        Prompt prompt = new Prompt("JMusicBot", "Switching to nogui mode. You can manually start in nogui mode by including the -Dnogui=true flag.",
+        Prompt prompt = new Prompt("BlindTestBot", "Switching to nogui mode. You can manually start in nogui mode by including the -Dnogui=true flag.",
                 "true".equalsIgnoreCase(System.getProperty("nogui", "false")));
 
         // check for valid java version
@@ -113,15 +113,14 @@ public class JMusicBot {
                         new BackupCmd(bot, blindTest),
                         new AddEntryCmd(bot, blindTest),
                         new RemoveEntryCmd(bot, blindTest),
-                        new SetEntryArtistCmd(bot, blindTest),
+                        new UpdateEntryItemCmd(bot, blindTest),
                         new SetEntryStart(bot, blindTest),
-                        new SetEntryTitleCmd(bot, blindTest),
                         new ListEntriesCmd(bot, blindTest),
                         new AddExtraCmd(bot, blindTest),
                         new RemoveExtraCmd(bot, blindTest),
                         new PoolCmd(bot, blindTest),
                         new ScoreboardCmd(bot, blindTest),
-                        new RulesCmd(bot, blindTest, config.getHelp(), config.getMaximumExtrasNumber()),
+                        new RulesCmd(bot, blindTest, config.getHelp(), config.getMaximumExtrasNumber(), config.getPrefix()),
                         new PlaylistCmd(bot, blindTest),
                         new SetdjCmd(bot),
                         new SettcCmd(bot, blindTest),
@@ -174,7 +173,7 @@ public class JMusicBot {
             jda.awaitStatus(JDA.Status.CONNECTED);
             List<Guild> guilds = jda.getGuilds();
             if (guilds.size() != 1) {
-                prompt.alert(Prompt.Level.ERROR, "JMusicBot", "The bot can not be installed on more than 1 server. It is currently on servers : " + guilds.stream().map(Guild::getName).collect(Collectors.joining(", ")));
+                prompt.alert(Prompt.Level.ERROR, "BlindTestBot", "The bot can not be installed on more than 1 server. It is currently on servers : " + guilds.stream().map(Guild::getName).collect(Collectors.joining(", ")));
                 System.exit(1);
             }
             // set up blind-test channel
@@ -189,16 +188,16 @@ public class JMusicBot {
             }
             blindTest.setBtChannel(textChannel);
         } catch (LoginException ex) {
-            prompt.alert(Prompt.Level.ERROR, "JMusicBot", ex + "\nPlease make sure you are "
+            prompt.alert(Prompt.Level.ERROR, "BlindTestBot", ex + "\nPlease make sure you are "
                                                           + "editing the correct config.txt file, and that you have used the "
                                                           + "correct token (not the 'secret'!)\nConfig Location: " + config.getConfigLocation());
             System.exit(1);
         } catch (IllegalArgumentException ex) {
-            prompt.alert(Prompt.Level.ERROR, "JMusicBot", "Some aspect of the configuration is "
+            prompt.alert(Prompt.Level.ERROR, "BlindTestBot", "Some aspect of the configuration is "
                                                           + "invalid: " + ex + "\nConfig Location: " + config.getConfigLocation());
             System.exit(1);
         } catch (InterruptedException e) {
-            prompt.alert(Prompt.Level.ERROR, "JMusicBot", "Error while awaiting for JDA to connect");
+            prompt.alert(Prompt.Level.ERROR, "BlindTestBot", "Error while awaiting for JDA to connect");
             System.exit(1);
         }
         blindTest.restoreState("AUTO");

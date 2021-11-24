@@ -28,7 +28,7 @@ public class AddExtraCmd extends BTDMCommand {
         super(bot, blindTest);
         this.name = "addextra";
         this.help = "adds an extra input to guess to the song entry";
-        this.arguments = "<song index> <extra>";
+        this.arguments = "<song index> <extra name> <extra value>";
         this.aliases = bot.getConfig().getAliases(this.name);
         this.guildOnly = false;
     }
@@ -36,13 +36,14 @@ public class AddExtraCmd extends BTDMCommand {
     @Override
     public void doCommand(CommandEvent event) {
         String author = event.getMessage().getAuthor().getName();
-        String[] spl = event.getArgs().split(" ", 2);
+        String[] spl = event.getArgs().split(" ", 3);
 
         try {
             Integer songIdx = Integer.valueOf(spl[0]);
-            String extra = spl[1];
-            boolean updateResult = blindTest.addExtra(author, songIdx, extra);
-            if (!updateResult) event.reply("Error : could not find any submission with that index, or the maximum number of extras has been reached");
+            String extraName = spl[1];
+            String extraValue = spl[2];
+            boolean updateResult = blindTest.addExtra(author, songIdx, extraName, extraValue);
+            if (!updateResult) event.reply("Error : no submission with that index, invalid extra name, or the maximum number of extras has been reached");
             else event.reply("Extra successfully added");
             List<String> lists = blindTest.getSongList(author);
             for (String list : lists) {

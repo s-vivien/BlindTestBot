@@ -21,7 +21,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
-import fr.svivien.btbot.JMusicBot;
+import fr.svivien.btbot.BlindTestBot;
 import fr.svivien.btbot.utils.FormatUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -127,7 +127,7 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler 
                 eb.setFooter("Source: " + track.getInfo().author, null);
 
             double progress = (double) audioPlayer.getPlayingTrack().getPosition() / track.getDuration();
-            eb.setDescription((audioPlayer.isPaused() ? JMusicBot.PAUSE_EMOJI : JMusicBot.PLAY_EMOJI)
+            eb.setDescription((audioPlayer.isPaused() ? BlindTestBot.PAUSE_EMOJI : BlindTestBot.PLAY_EMOJI)
                               + " " + FormatUtil.progressBar(progress)
                               + " `[" + FormatUtil.formatTime(track.getPosition()) + "/" + FormatUtil.formatTime(track.getDuration()) + "]` "
                               + FormatUtil.volumeIcon(audioPlayer.getVolume()));
@@ -142,7 +142,7 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler 
                 .setContent(FormatUtil.filter(manager.getBot().getConfig().getSuccess() + " **Now Playing...**"))
                 .setEmbed(new EmbedBuilder()
                         .setTitle("No music playing")
-                        .setDescription(JMusicBot.STOP_EMOJI + " " + FormatUtil.progressBar(-1) + " " + FormatUtil.volumeIcon(audioPlayer.getVolume()))
+                        .setDescription(BlindTestBot.STOP_EMOJI + " " + FormatUtil.progressBar(-1) + " " + FormatUtil.volumeIcon(audioPlayer.getVolume()))
                         .setColor(guild.getSelfMember().getColor())
                         .build()).build();
     }
@@ -155,10 +155,10 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler 
             if (title == null || title.equals("Unknown Title"))
                 title = track.getInfo().uri;
             return "**" + title + "** [" + (userid == 0 ? "autoplay" : "<@" + userid + ">") + "]"
-                   + "\n" + (audioPlayer.isPaused() ? JMusicBot.PAUSE_EMOJI : JMusicBot.PLAY_EMOJI) + " "
+                   + "\n" + (audioPlayer.isPaused() ? BlindTestBot.PAUSE_EMOJI : BlindTestBot.PLAY_EMOJI) + " "
                    + "[" + FormatUtil.formatTime(track.getDuration()) + "] "
                    + FormatUtil.volumeIcon(audioPlayer.getVolume());
-        } else return "No music playing " + JMusicBot.STOP_EMOJI + " " + FormatUtil.volumeIcon(audioPlayer.getVolume());
+        } else return "No music playing " + BlindTestBot.STOP_EMOJI + " " + FormatUtil.volumeIcon(audioPlayer.getVolume());
     }
 
     @Override
