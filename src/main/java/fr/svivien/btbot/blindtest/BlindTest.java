@@ -167,11 +167,11 @@ public class BlindTest {
     }
 
     public int getEntriesSize() {
-        return entries.entrySet().stream().mapToInt(e -> e.getValue().size()).sum();
+        return entries.values().stream().mapToInt(HashSet::size).sum();
     }
 
     public int getDoneEntriesSize() {
-        return entries.entrySet().stream().mapToInt(e -> (int) e.getValue().stream().filter(s -> s.isDone()).count()).sum();
+        return entries.values().stream().mapToInt(songEntries -> (int) songEntries.stream().filter(SongEntry::isDone).count()).sum();
     }
 
     public void printSongPool() {
@@ -476,7 +476,7 @@ public class BlindTest {
 
     private List<SongEntry> getFlatEntries() {
         List<SongEntry> entryList = new ArrayList<>();
-        entries.entrySet().forEach(e -> entryList.addAll(e.getValue()));
+        entries.forEach((key, value) -> entryList.addAll(value));
         return entryList;
     }
 

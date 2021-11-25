@@ -31,6 +31,8 @@ import net.dv8tion.jda.api.managers.AudioManager;
 
 public class NextCmd extends BTDJCommand {
 
+    private static final int MAX_RETRIES = 10;
+
     public NextCmd(Bot bot, BlindTest blindTest) {
         super(bot, blindTest, false);
         this.name = "next";
@@ -44,6 +46,7 @@ public class NextCmd extends BTDJCommand {
     @Override
     public void doCommand(CommandEvent commandEvent) {
         AudioHandler handler = (AudioHandler) commandEvent.getGuild().getAudioManager().getSendingHandler();
+        if (handler == null) return;
         if (handler.getPlayer().getPlayingTrack() != null) {
             commandEvent.reply("Previous song is still playing :upside_down:");
             return;
@@ -58,7 +61,7 @@ public class NextCmd extends BTDJCommand {
 
     private class ResultHandler implements AudioLoadResultHandler {
 
-        private CommandEvent event;
+        private final CommandEvent event;
         private int tries = 0;
 
         public ResultHandler(CommandEvent event) {
@@ -66,10 +69,11 @@ public class NextCmd extends BTDJCommand {
         }
 
         private boolean queueTrack(AudioHandler handler, AudioTrack track) {
-            if (tries++ < 10) {
+            if (tries++ < MAX_RETRIES) {
                 handler.addTrack(new QueuedTrack(track.makeClone(), event.getAuthor()));
                 return true;
             }
+            event.reply(":tired_face: Failed to launch the track after " + MAX_RETRIES + " tries...");
             return false;
         }
 
