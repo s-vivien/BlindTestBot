@@ -7,10 +7,11 @@ import com.google.gson.reflect.TypeToken;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import fr.svivien.btbot.BotConfig;
 import fr.svivien.btbot.audio.AudioHandler;
-import fr.svivien.btbot.blindtest.model.AddResult;
 import fr.svivien.btbot.blindtest.model.Guessable;
 import fr.svivien.btbot.blindtest.model.SongEntry;
 import fr.svivien.btbot.blindtest.model.TrackMetadata;
+import fr.svivien.btbot.blindtest.model.operation.EntryOperationResult;
+import fr.svivien.btbot.blindtest.model.operation.ValueOperationResult;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -40,6 +41,8 @@ import java.util.stream.IntStream;
 public class BlindTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BlindTest.class);
+    public static final String ARTIST = "artist";
+    public static final String TITLE = "title";
     private final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String AUTOBACKUP_NAME = "AUTO";
     private static final String EMOJI = ":fire:";
@@ -254,14 +257,14 @@ public class BlindTest {
         }
     }
 
-    public AddResult addSongRequest(String author, AudioTrack audioTrack, TrackMetadata trackMetadata, int startOffset) {
+    public EntryOperationResult addSongRequest(String author, AudioTrack audioTrack, TrackMetadata trackMetadata, int startOffset) {
         LOGGER.info(author + " added a track to the pool");
         entries.computeIfAbsent(author, k -> new LinkedHashSet<>());
         scores.putIfAbsent(author, 0);
-        if (entries.get(author).size() >= songsPerPlayer) return AddResult.FULL_LIST;
+        if (entries.get(author).size() >= songsPerPlayer) return EntryOperationResult.FULL_LIST;
         SongEntry se = new SongEntry(audioTrack.getInfo().uri, author, cleanLight(trackMetadata.getArtist()), cleanTitle(trackMetadata.getTitle()),
                 trackMetadata.getArtist() + " - " + trackMetadata.getTitle(), audioTrack.getInfo().identifier, startOffset);
-        return entries.get(author).add(se) ? (se.isIncomplete() ? AddResult.SUCCESS_INCOMPLETE : AddResult.SUCCESS) : AddResult.ALREADY_ADDED;
+        return entries.get(author).add(se) ? (se.isIncomplete() ? EntryOperationResult.SUCCESS_INCOMPLETE : EntryOperationResult.SUCCESS) : EntryOperationResult.ALREADY_ADDED;
     }
 
     public boolean removeSongRequest(String author, Integer index) {
@@ -281,47 +284,49 @@ public class BlindTest {
         return false;
     }
 
-    public boolean updateGuessable(String author, Integer index, String guessableName, String guessableValue) {
+    public ValueOperationResult setValue(String author, Integer index, String name, String value) {
         SongEntry e = getEntryByIndex(author, index);
-        if (e == null) return false;
-        Guessable g = e.getGuessable(guessableName, 0);
-        if (g == null) return false;
+        if (e == null) return ValueOperationResult.ENTRY_NOT_FOUND;
 
-        if (guessableName.equals("artist")) {
-            guessableValue = cleanLight(guessableValue);
-        } else if (guessableName.equals("title")) {
-            guessableValue = cleanTitle(guessableValue);
+        Guessable g = e.getGuessable(name, 0);
+        ValueOperationResult result;
+        if (g == null) {
+            if (e.getGuessables().size() >= 2 + maximumExtrasNumber) return ValueOperationResult.FULL;
+            g = new Guessable(name, null);
+            e.getGuessables().add(g);
+            result = ValueOperationResult.ADDED;
         } else {
-            guessableValue = guessableValue.toLowerCase();
+            result = ValueOperationResult.UPDATED;
         }
-        g.setValue(guessableValue);
+
+        if (name.equals(ARTIST)) {
+            value = cleanLight(value);
+        } else if (name.equals(TITLE)) {
+            value = cleanTitle(value);
+        } else {
+            value = value.toLowerCase();
+        }
+        g.setValue(value);
 
         e.recomputeOriginalTitle();
-        return true;
+        return result;
     }
 
-    public boolean addExtra(String author, Integer index, String extraName, String extraValue) {
+    public ValueOperationResult unsetValue(String author, Integer index, String name) {
         SongEntry e = getEntryByIndex(author, index);
-        if (e == null) return false;
-        if (e.getGuessables().size() >= 2 + maximumExtrasNumber) return false;
-        Guessable g = e.getGuessable(extraName, 0);
-        if (g != null) return false;
-        e.getGuessables().add(new Guessable(extraName, extraValue.toLowerCase()));
-        e.recomputeOriginalTitle();
-        return true;
-    }
+        if (e == null) return ValueOperationResult.ENTRY_NOT_FOUND;
 
-    public boolean removeExtra(String author, Integer index, String extraName) {
-        SongEntry e = getEntryByIndex(author, index);
-        if (e == null) return false;
-        Guessable g = e.getGuessable(extraName, 2);
-        if (g == null) return false;
+        if (name.equals(ARTIST) || name.equals(TITLE)) return ValueOperationResult.FORBIDDEN;
+
+        Guessable g = e.getGuessable(name, 2);
+        if (g == null) return ValueOperationResult.VALUE_NOT_FOUND;
+
         e.getGuessables().remove(g);
         e.recomputeOriginalTitle();
-        return true;
+        return ValueOperationResult.UPDATED;
     }
 
-    public boolean setOffset(String author, Integer index, Integer offset) {
+    public boolean setStartOffset(String author, Integer index, Integer offset) {
         SongEntry e = getEntryByIndex(author, index);
         if (e == null) return false;
         e.setStartOffset(offset);

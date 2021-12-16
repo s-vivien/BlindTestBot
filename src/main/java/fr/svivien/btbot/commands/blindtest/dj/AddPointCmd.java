@@ -1,18 +1,3 @@
-/*
- * Copyright 2016 John Grosh <john.a.grosh@gmail.com>.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package fr.svivien.btbot.commands.blindtest.dj;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
@@ -40,7 +25,7 @@ public class AddPointCmd extends BTDJCommand {
             String realNick = blindTest.checkNick(nick);
             if (realNick != null) {
                 int score = blindTest.addScore(realNick, pts);
-                event.reply(pts + " added" + ((pts > 1 || pts < -1) ? "s" : "") + " to " + realNick + ", who now has " + score);
+                event.reply(pts + " point" + ((pts > 1 || pts < -1) ? "s" : "") + " added to `" + realNick + "`, who now has " + score);
             } else {
                 event.reply("Unknown player..");
             }
