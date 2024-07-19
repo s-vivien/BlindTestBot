@@ -77,6 +77,10 @@ public class NextCmd extends BTDJCommand {
             handler.setOnTrackEndLambda((Long position) -> {
                 if (position == 0) { // The track most likely crashed at loading, retrying
                     handler.stopAndClear();
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ignored) {
+                    }
                     if (!queueTrack(handler, audioTrack)) {
                         blindTest.onTrackEnd();
                     }

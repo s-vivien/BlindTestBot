@@ -1,13 +1,8 @@
 package fr.svivien.btbot.commands.blindtest.dm;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jagrosh.jdautilities.command.CommandEvent;
-import com.sapher.youtubedl.YoutubeDL;
-import com.sapher.youtubedl.YoutubeDLException;
-import com.sapher.youtubedl.YoutubeDLRequest;
-import com.sapher.youtubedl.YoutubeDLResponse;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
@@ -18,10 +13,14 @@ import fr.svivien.btbot.blindtest.model.TrackMetadata;
 import fr.svivien.btbot.blindtest.model.operation.EntryOperationResult;
 import fr.svivien.btbot.commands.BTDMCommand;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AddCmd extends BTDMCommand {
+
+    private final ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     public AddCmd(Bot bot, BlindTest blindTest) {
         super(bot, blindTest);
@@ -71,10 +70,14 @@ public class AddCmd extends BTDMCommand {
                 entryOperationResult = EntryOperationResult.PEGI18;
             }
             String reply = "Adding **" + audioTrack.getInfo().title + "** ... ";
-            if (entryOperationResult == EntryOperationResult.ALREADY_ADDED) reply += ":no_entry_sign: This song has already been added";
-            else if (entryOperationResult == EntryOperationResult.FULL_LIST) reply += ":no_entry_sign: Maximum number of songs has been reached";
-            else if (entryOperationResult == EntryOperationResult.PEGI18) reply += ":no_entry_sign: This video is PEGI 18 and cannot be played";
-            else reply += ":white_check_mark: Song successfully added" + (entryOperationResult == EntryOperationResult.SUCCESS_INCOMPLETE ? " (:rotating_light: there might be an error in artist and/or title)" : "");
+            if (entryOperationResult == EntryOperationResult.ALREADY_ADDED)
+                reply += ":no_entry_sign: This song has already been added";
+            else if (entryOperationResult == EntryOperationResult.FULL_LIST)
+                reply += ":no_entry_sign: Maximum number of songs has been reached";
+            else if (entryOperationResult == EntryOperationResult.PEGI18)
+                reply += ":no_entry_sign: This video is PEGI 18 and cannot be played";
+            else
+                reply += ":white_check_mark: Song successfully added" + (entryOperationResult == EntryOperationResult.SUCCESS_INCOMPLETE ? " (:rotating_light: there might be an error in artist and/or title)" : "");
             event.reply(reply);
             return entryOperationResult;
         }
@@ -106,31 +109,51 @@ public class AddCmd extends BTDMCommand {
 
     private TrackMetadata extractArtistAndTrack(String videoUrl) throws Pegi18Exception {
         try {
-            // Build request
-            YoutubeDLRequest request = new YoutubeDLRequest(videoUrl);
-            request.setOption("simulate");
-            request.setOption("dump-json");
+            Runtime runtime = Runtime.getRuntime();
+            Process process = runtime.exec(String.format("yt-dlp.exe %s --dump-json", videoUrl));
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line = "";
+            while ((line = bufferedReader.readLine()) != null) {
+                sb.append(line);
+                sb.append("\n");
+            }
 
-            // Make request and return response
-            YoutubeDLResponse response = YoutubeDL.execute(request);
+            YTResponse response = mapper.readValue(sb.toString(), YTResponse.class);
+            if (response.age_limit >= 18) throw new Pegi18Exception();
 
-            // Response
-            String stdOut = response.getOut(); // Executable output
+            String track = null;
+            String artist = null;
 
-            JsonParser parser = new JsonParser();
-            JsonElement parsedTree = parser.parse(stdOut);
-            JsonObject root = parsedTree.getAsJsonObject();
-            int ageLimit = root.get("age_limit").getAsInt();
-            if (ageLimit >= 18) throw new Pegi18Exception();
-            String track = root.get("track").getAsString();
-            String artist = root.get("artist").getAsString();
+            String title = response.title;
+            Pattern pattern = Pattern.compile("(.*) - ([^\\(\\[]*)", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(title);
+            boolean matchFound = matcher.find();
+            if (matchFound) {
+                artist = matcher.group(1).split(",")[0];
+                track = matcher.group(2);
+            }
+            if (response.track != null) {
+                track = response.track;
+            }
+            if (response.artist != null) {
+                artist = response.artist.split(",")[0];
+            }
             return new TrackMetadata(artist, track);
-        } catch (RuntimeException | YoutubeDLException ignored) {
+        } catch (Exception ignored) {
             ignored.printStackTrace();
         }
 
         return new TrackMetadata();
     }
 
-    static class Pegi18Exception extends Exception {}
+    private static class YTResponse {
+        public String title;
+        public int age_limit;
+        public String track;
+        public String artist;
+    }
+
+    static class Pegi18Exception extends Exception {
+    }
 }

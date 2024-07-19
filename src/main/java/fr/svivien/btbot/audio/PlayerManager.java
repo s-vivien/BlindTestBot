@@ -17,7 +17,7 @@ package fr.svivien.btbot.audio;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
+import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import fr.svivien.btbot.Bot;
 import net.dv8tion.jda.api.entities.Guild;
 
