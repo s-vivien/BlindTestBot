@@ -48,9 +48,6 @@ public class BlindTest {
     private static final String EMOJI = ":fire:";
     private static final String SUCCESS_REPLY_TEMPLATE2 = EMOJI + " %s `[%s]` found by %s ! (+%d) " + EMOJI;
     private static final int NOTFOUND_SCORE = -1;
-    private static final int MAX_DIST_RATIO = 6;
-    private static final int MAX_DIST_OFFSET = 3;
-    private static final double INCLUDE_TOLERANCE = 1.6;
     private static final OkHttpClient client = new OkHttpClient();
 
     // State
@@ -67,7 +64,6 @@ public class BlindTest {
     // Current song
     private final Set<String> skipRequests = new HashSet<>();
     private SongEntry currentSongEntry = null;
-    private final int[] maxDists;
     private final boolean[] isGuessed;
     private int yetToGuess;
 
@@ -76,7 +72,6 @@ public class BlindTest {
         backupPath = cfg.getBackupPath();
         maximumExtrasNumber = cfg.getMaximumExtrasNumber();
         isGuessed = new boolean[2 + maximumExtrasNumber];
-        maxDists = new int[2 + maximumExtrasNumber];
     }
 
     public void clearCurrentSong() {
@@ -98,7 +93,7 @@ public class BlindTest {
             String msg = skipRequests.size() + " player(s) requested a *skip*.";
             VoiceChannel vc = event.getGuild().getAudioManager().getConnectedChannel();
             assert vc != null;
-            int requiredSkipNumber = 1 + (vc.getMembers().size() - 1) / 2;
+            int requiredSkipNumber = 1 + (vc.getMembers().size() - 1) / 3;
             boolean skip = false;
             if (skipRequests.size() >= requiredSkipNumber) {
                 skip = true;
@@ -137,7 +132,8 @@ public class BlindTest {
         int i = -1;
         for (Guessable guessable : currentSongEntry.getGuessables()) {
             if (isGuessed[++i]) continue;
-            if (calculateDistance(proposition, guessable.getValue()) <= maxDists[i] || (proposition.contains(guessable.getValue()) && proposition.length() <= INCLUDE_TOLERANCE * guessable.getValue().length())) {
+            var score = sorensenDiceScore(guessable.getValue(), proposition);
+            if (score >= 0.75) {
                 isGuessed[i] = true;
                 yetToGuess--;
                 int delta = 1 + (trackGuessers.contains(author) ? 1 : 0);
@@ -163,9 +159,6 @@ public class BlindTest {
         currentSongEntry = entryList.get(0);
         yetToGuess = currentSongEntry.getGuessables().size();
         currentSongEntry.setDone(true);
-        for (int i = 0; i < yetToGuess; i++) {
-            maxDists[i] = Math.max(0, currentSongEntry.getGuessables().get(i).getValue().length() - MAX_DIST_OFFSET) / MAX_DIST_RATIO;
-        }
         return true;
     }
 
@@ -489,7 +482,14 @@ public class BlindTest {
         if (input == null) return null;
         return Normalizer.normalize(input.toLowerCase(), Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
-                .replaceAll("[,\\!\\?\\:;\\.]", "")
+                .replaceAll("[!?]+$", "")
+                .replaceAll("^[!?]+", "")
+                .replaceAll(" [!?]+", " ")
+                .replaceAll("[!?]+ ", " ")
+                .replaceAll("[¿¡*,.’':\\/-]", "")
+                .replaceAll("œ", "oe")
+                .replaceAll("[$]", "s")
+                .replaceAll("[ø]", "o")
                 .trim();
     }
 
@@ -502,35 +502,63 @@ public class BlindTest {
         return matchFound ? matcher.group(1).trim() : title.trim();
     }
 
-    private int calculateDistance(String source, String target) {
-        int sourceLength = source.length();
-        int targetLength = target.length();
-        if (sourceLength == 0) return targetLength;
-        if (targetLength == 0) return sourceLength;
-        int[][] dist = new int[sourceLength + 1][targetLength + 1];
-        for (int i = 0; i < sourceLength + 1; i++) {
-            dist[i][0] = i;
-        }
-        for (int j = 0; j < targetLength + 1; j++) {
-            dist[0][j] = j;
-        }
-        for (int i = 1; i < sourceLength + 1; i++) {
-            for (int j = 1; j < targetLength + 1; j++) {
-                int cost = source.charAt(i - 1) == target.charAt(j - 1) ? 0 : 1;
+    private double sorensenDiceScore(String first, String second) {
+        first = first.replace("\\s+", "");
+        second = second.replace("\\s+", "");
 
-                // special cases
-                if (source.charAt(i - 1) == ' ' && (target.charAt(j - 1) == '-' || target.charAt(j - 1) == '\''))
-                    cost = 0;
+        if (first.equals(second)) return 1;
+        if (first.length() < 2 && second.length() >= 2) return 0;
 
-                dist[i][j] = Math.min(Math.min(dist[i - 1][j] + 1, dist[i][j - 1] + 1), dist[i - 1][j - 1] + cost);
-                if (i > 1 &&
-                        j > 1 &&
-                        source.charAt(i - 1) == target.charAt(j - 2) &&
-                        source.charAt(i - 2) == target.charAt(j - 1)) {
-                    dist[i][j] = Math.min(dist[i][j], dist[i - 2][j - 2] + cost);
+        var firstBigrams = new HashMap<String, Integer>();
+        var firstReverseBigrams = new HashMap<String, Integer>();
+        var firstAltBigrams = new HashMap<String, Integer>();
+        for (int i = 0; i < first.length() - 1; i++) {
+            var bigram = String.valueOf(first.charAt(i)) + first.charAt(i + 1);
+            var count = firstBigrams.getOrDefault(bigram, 0);
+            firstBigrams.put(bigram, count+1);
+
+            var reverseBigram = String.valueOf(first.charAt(i + 1)) + first.charAt(i);
+            var reverseCount = firstReverseBigrams.getOrDefault(reverseBigram, 0);
+            firstReverseBigrams.put(reverseBigram, reverseCount+1);
+
+            if (i + 2 < first.length()) {
+                var altBigram = String.valueOf(first.charAt(i)) + first.charAt(i + 2);
+                var altCount = firstAltBigrams.getOrDefault(altBigram, 0);
+                firstAltBigrams.put(altBigram, altCount+1);
+            }
+        }
+
+        double intersectionSize = 0;
+        double altRatio = Math.max(0.2, 1.0 - 0.05 * first.length());
+
+        for (int i = 0; i < second.length() - 1; i++) {
+            var bigram = String.valueOf(second.charAt(i)) + second.charAt(i + 1);
+
+            if (firstBigrams.get(bigram) != null) {
+                var count = firstBigrams.get(bigram);
+                if (count > 0) {
+                    firstBigrams.put(bigram, count - 1);
+                    intersectionSize++;
+                    continue;
+                }
+            }
+            if (firstReverseBigrams.get(bigram) != null) {
+                var count = firstReverseBigrams.get(bigram);
+                if (count > 0) {
+                    firstReverseBigrams.put(bigram, count - 1);
+                    intersectionSize += altRatio;
+                    continue;
+                }
+            }
+            if (firstAltBigrams.get(bigram) != null) {
+                var count = firstAltBigrams.get(bigram);
+                if (count > 0) {
+                    firstAltBigrams.put(bigram, count - 1);
+                    intersectionSize += altRatio;
                 }
             }
         }
-        return dist[sourceLength][targetLength];
+
+        return (2.0 * intersectionSize) / (first.length() + second.length() - 2);
     }
 }
