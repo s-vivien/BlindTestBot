@@ -22,8 +22,6 @@ import fr.svivien.btbot.Bot;
 import fr.svivien.btbot.commands.OwnerCommand;
 import fr.svivien.btbot.utils.OtherUtil;
 import net.dv8tion.jda.api.JDAInfo;
-import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.ChannelType;
 
 /**
  * @author John Grosh (john.a.grosh@gmail.com)
@@ -72,10 +70,10 @@ public class DebugCmd extends OwnerCommand {
                 .append("\n  Users = ").append(event.getJDA().getUserCache().size());
         sb.append("\n```");
 
-        if (event.isFromType(ChannelType.PRIVATE)
-            || event.getSelfMember().hasPermission(event.getTextChannel(), Permission.MESSAGE_ATTACH_FILES))
-            event.getChannel().sendFile(sb.toString().getBytes(), "debug_information.txt").queue();
-        else
-            event.reply("Debug Information: " + sb.toString());
+//        if (event.isFromType(ChannelType.PRIVATE)
+//            || event.getSelfMember().hasPermission(event.getTextChannel(), Permission.MESSAGE_ATTACH_FILES))
+//            event.getChannel().sendFile(sb.toString().getBytes(), "debug_information.txt").queue();
+//        else
+            event.reply("Debug Information: " + sb);
     }
 }

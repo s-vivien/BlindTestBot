@@ -6,8 +6,6 @@ import fr.svivien.btbot.audio.AudioHandler;
 import fr.svivien.btbot.blindtest.BlindTest;
 import fr.svivien.btbot.settings.Settings;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.exceptions.PermissionException;
 
 public abstract class BTCommand extends CustomCommand {
@@ -28,7 +26,7 @@ public abstract class BTCommand extends CustomCommand {
     protected void execute(CommandEvent event) {
         if (event.getMessage().isFromGuild()) {
             Settings settings = event.getClient().getSettingsFor(event.getGuild());
-            TextChannel tchannel = settings.getTextChannel(event.getGuild());
+            var tchannel = settings.getTextChannel(event.getGuild());
             if (tchannel != null && !event.getTextChannel().equals(tchannel)) {
                 try {
                     event.getMessage().delete().queue();
@@ -42,20 +40,20 @@ public abstract class BTCommand extends CustomCommand {
                 return;
             }
             if (beListening) {
-                VoiceChannel current = event.getGuild().getSelfMember().getVoiceState().getChannel();
+                var current = event.getGuild().getSelfMember().getVoiceState().getChannel();
                 GuildVoiceState userState = event.getMember().getVoiceState();
-                if (!userState.inVoiceChannel() || userState.isDeafened() || (current != null && !userState.getChannel().equals(current))) {
+                if (!userState.inAudioChannel() || userState.isDeafened() || (current != null && !userState.getChannel().equals(current))) {
                     event.replyError("You must be listening in " + (current == null ? "a voice channel" : "**" + current.getName() + "**") + " to use that!");
                     return;
                 }
 
-                VoiceChannel afkChannel = userState.getGuild().getAfkChannel();
+                var afkChannel = userState.getGuild().getAfkChannel();
                 if (afkChannel != null && afkChannel.equals(userState.getChannel())) {
                     event.replyError("You cannot use that command in an AFK channel!");
                     return;
                 }
 
-                if (!event.getGuild().getSelfMember().getVoiceState().inVoiceChannel()) {
+                if (!event.getGuild().getSelfMember().getVoiceState().inAudioChannel()) {
                     try {
                         event.getGuild().getAudioManager().openAudioConnection(userState.getChannel());
                     } catch (PermissionException ex) {

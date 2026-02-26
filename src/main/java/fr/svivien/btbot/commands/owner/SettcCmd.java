@@ -22,7 +22,7 @@ import fr.svivien.btbot.blindtest.BlindTest;
 import fr.svivien.btbot.commands.OwnerCommand;
 import fr.svivien.btbot.settings.Settings;
 import fr.svivien.btbot.utils.FormatUtil;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 import java.util.List;
 

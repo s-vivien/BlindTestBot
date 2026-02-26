@@ -17,6 +17,7 @@ package fr.svivien.btbot.audio;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import fr.svivien.btbot.Bot;
 import net.dv8tion.jda.api.entities.Guild;
@@ -37,6 +38,7 @@ public class PlayerManager extends DefaultAudioPlayerManager
     public void init()
     {
         this.registerSourceManager(new YoutubeAudioSourceManager(true));
+        AudioSourceManagers.registerLocalSource(this);
         source(YoutubeAudioSourceManager.class).setPlaylistPageCount(10);
     }
     

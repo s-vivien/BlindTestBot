@@ -17,7 +17,6 @@ package fr.svivien.btbot;
 
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import fr.svivien.btbot.audio.AudioHandler;
-import fr.svivien.btbot.audio.NowplayingHandler;
 import fr.svivien.btbot.audio.PlayerManager;
 import fr.svivien.btbot.gui.GUI;
 import fr.svivien.btbot.settings.SettingsManager;
@@ -40,8 +39,7 @@ public class Bot
     private final BotConfig config;
     private final SettingsManager settings;
     private final PlayerManager players;
-    private final NowplayingHandler nowplaying;
-    
+
     private boolean shuttingDown = false;
     private JDA jda;
     private GUI gui;
@@ -54,8 +52,6 @@ public class Bot
         this.threadpool = Executors.newSingleThreadScheduledExecutor();
         this.players = new PlayerManager(this);
         this.players.init();
-        this.nowplaying = new NowplayingHandler(this);
-        this.nowplaying.init();
     }
     
     public BotConfig getConfig()
@@ -81,11 +77,6 @@ public class Bot
     public PlayerManager getPlayerManager()
     {
         return players;
-    }
-    
-    public NowplayingHandler getNowplayingHandler()
-    {
-        return nowplaying;
     }
     
     public JDA getJDA()
@@ -123,7 +114,6 @@ public class Bot
                 {
                     ah.stopAndClear();
                     ah.getPlayer().destroy();
-                    nowplaying.updateTopic(g.getIdLong(), ah, true);
                 }
             });
             jda.shutdown();

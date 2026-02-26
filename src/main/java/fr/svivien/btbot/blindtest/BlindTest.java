@@ -12,8 +12,7 @@ import fr.svivien.btbot.blindtest.model.SongEntry;
 import fr.svivien.btbot.blindtest.model.TrackMetadata;
 import fr.svivien.btbot.blindtest.model.operation.EntryOperationResult;
 import fr.svivien.btbot.blindtest.model.operation.ValueOperationResult;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -26,7 +25,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -91,7 +89,7 @@ public class BlindTest {
     public void onSkip(MessageReceivedEvent event) {
         if (skipRequests.add(event.getAuthor().getName())) {
             String msg = skipRequests.size() + " player(s) requested a *skip*.";
-            VoiceChannel vc = event.getGuild().getAudioManager().getConnectedChannel();
+            var vc = event.getGuild().getAudioManager().getConnectedChannel();
             assert vc != null;
             int requiredSkipNumber = 1 + (vc.getMembers().size() - 1) / 3;
             boolean skip = false;
@@ -133,7 +131,7 @@ public class BlindTest {
         for (Guessable guessable : currentSongEntry.getGuessables()) {
             if (isGuessed[++i]) continue;
             var score = sorensenDiceScore(guessable.getValue(), proposition);
-            if (score >= 0.75) {
+            if (score >= 0.8) {
                 isGuessed[i] = true;
                 yetToGuess--;
                 int delta = 1 + (trackGuessers.contains(author) ? 1 : 0);
@@ -168,6 +166,10 @@ public class BlindTest {
 
     public int getDoneEntriesSize() {
         return entries.values().stream().mapToInt(songEntries -> (int) songEntries.stream().filter(SongEntry::isDone).count()).sum();
+    }
+
+    public List<SongEntry> getAllEntries() {
+        return entries.entrySet().stream().flatMap(e -> e.getValue().stream()).collect(Collectors.toList());
     }
 
     public void printSongPool() {
@@ -217,10 +219,6 @@ public class BlindTest {
             for (String part : data) {
                 btChannel.sendMessage(part).queue();
             }
-            btChannel.sendFile(doneEntries.stream()
-                    .map(e -> e.getUrl() + " - " + e.getCompleteOriginalTitle())
-                    .collect(Collectors.joining("\n"))
-                    .getBytes(StandardCharsets.UTF_8), "tracklist_" + new Date().toString() + ".txt").queue();
         } else {
             btChannel.sendMessage("No song have been played so far :confused:").queue();
         }
@@ -457,6 +455,10 @@ public class BlindTest {
         return backupPath + File.separator + name + ".json";
     }
 
+    public String getLocalFilePath() {
+        return backupPath + File.separator + "localFiles";
+    }
+
     private SongEntry getEntryByIndex(String author, Integer index) {
         LinkedHashSet<SongEntry> entrySet = entries.get(author);
         if (entrySet == null || entrySet.isEmpty() || entrySet.size() < index) return null;
@@ -515,16 +517,16 @@ public class BlindTest {
         for (int i = 0; i < first.length() - 1; i++) {
             var bigram = String.valueOf(first.charAt(i)) + first.charAt(i + 1);
             var count = firstBigrams.getOrDefault(bigram, 0);
-            firstBigrams.put(bigram, count+1);
+            firstBigrams.put(bigram, count + 1);
 
             var reverseBigram = String.valueOf(first.charAt(i + 1)) + first.charAt(i);
             var reverseCount = firstReverseBigrams.getOrDefault(reverseBigram, 0);
-            firstReverseBigrams.put(reverseBigram, reverseCount+1);
+            firstReverseBigrams.put(reverseBigram, reverseCount + 1);
 
             if (i + 2 < first.length()) {
                 var altBigram = String.valueOf(first.charAt(i)) + first.charAt(i + 2);
                 var altCount = firstAltBigrams.getOrDefault(altBigram, 0);
-                firstAltBigrams.put(altBigram, altCount+1);
+                firstAltBigrams.put(altBigram, altCount + 1);
             }
         }
 

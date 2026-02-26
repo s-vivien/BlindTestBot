@@ -11,7 +11,6 @@ import fr.svivien.btbot.audio.QueuedTrack;
 import fr.svivien.btbot.blindtest.BlindTest;
 import fr.svivien.btbot.commands.BTDJCommand;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.managers.AudioManager;
 
 public class NextCmd extends BTDJCommand {
@@ -41,6 +40,8 @@ public class NextCmd extends BTDJCommand {
             return;
         }
 
+        // uncomment this shit if YT's APIs are broken again and you need to play from local files...
+//        bot.getPlayerManager().loadItem(blindTest.getLocalFilePath() + File.separator + blindTest.getCurrentSongEntry().getYtId(), new NextCmd.ResultHandler(commandEvent));
         bot.getPlayerManager().loadItem(blindTest.getCurrentSongEntry().getUrl(), new NextCmd.ResultHandler(commandEvent));
     }
 
@@ -86,7 +87,7 @@ public class NextCmd extends BTDJCommand {
                     }
                 } else {
                     // Add unknown players to the leaderboard
-                    VoiceChannel vc = manager.getConnectedChannel();
+                    var vc = manager.getConnectedChannel();
                     if (vc != null) {
                         for (Member member : vc.getMembers()) {
                             if (!member.getUser().isBot()) blindTest.addScore(member.getUser().getName(), 0);
